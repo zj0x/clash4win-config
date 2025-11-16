@@ -270,6 +270,12 @@ rules:
   - DOMAIN-SUFFIX,copilot.microsoft.com,AI
   - DOMAIN-SUFFIX,gemini.google.com,AI
 
+  # Adobe防验证设置
+  - DOMAIN-SUFFIX,adobe.io,REJECT
+  - DOMAIN-SUFFIX,*.adobe.io,REJECT
+  - DOMAIN-SUFFIX,adobestats.io,REJECT
+  - DOMAIN-SUFFIX,photo-api.adobe.io,DIRECT
+
   # ======== YouTube：视频全部走 YouTube 组（亚洲优先） ========
   - DOMAIN-SUFFIX,youtube.com,YouTube
   - DOMAIN-SUFFIX,googlevideo.com,YouTube
