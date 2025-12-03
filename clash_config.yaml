@@ -153,7 +153,7 @@ proxy-groups:
 
   - name: 🌀 AI
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/OpenAI.png
+    icon: https://github.com/Koolson/Qure/blob/master/IconSet/Color/AI.png
     proxies:
       - 🇺🇸 US Auto
       - 🇸🇬 SG Auto
