@@ -181,6 +181,7 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
     proxies:
       - 🇺🇸 US Auto
+      - 🇭🇰 HK Auto
       - 🇯🇵 JP Auto
       - 🇸🇬 SG Auto
       - 🚀 手动切换
@@ -272,6 +273,8 @@ rules:
   - AND,((NETWORK,UDP),(OR,((DOMAIN-SUFFIX,google.com),(DOMAIN-SUFFIX,youtube.com)))),REJECT
 
   # 2. AI 规则
+  - DOMAIN-SUFFIX,notebooklm.google.com,🌀 AI  # 【新增】强制 NotebookLLM 走 AI 组
+  - DOMAIN-KEYWORD,notebooklm,🌀 AI             # 【新增】兜底规则
   - RULE-SET,OpenAI,🌀 AI
   - RULE-SET,Claude,🌀 AI
   - RULE-SET,Gemini,🌀 AI
