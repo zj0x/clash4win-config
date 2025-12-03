@@ -1,47 +1,41 @@
-# 深川有喵「Clash_Mini」骨架 + Jun 粗简分流（AI / YouTube / GitHub，适配 AdGuard DNS）
-# 内核：Mihomo / Clash.Meta
-# 平台：Windows（TUN + AdGuard 做 DNS/去广告）
-
 port: 7890
 socks-port: 7891
 mixed-port: 7892
 redir-port: 7893
 tproxy-port: 7894
-
-unified-delay: true
-geodata-mode: false
-geodata-loader: standard
-geo-auto-update: true
-geo-update-interval: 24
-tcp-concurrent: true
-find-process-mode: strict
-global-client-fingerprint: chrome
-
+ipv6: true
 allow-lan: true
 mode: rule
 log-level: info
-ipv6: true
-udp: true
-
+unified-delay: true
 external-controller: 0.0.0.0:9090
-# external-ui: ui
-# external-ui-url: 'https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip'
 
+# --- 核心优化：连接与并发 ---
+tcp-concurrent: true       # 开启 TCP 并发连接
+keep-alive-interval: 30    # 保持连接活跃，减少握手延迟
+find-process-mode: strict  # 严格模式匹配进程
+global-client-fingerprint: chrome
+
+# --- Meta 内核 Geo 数据配置 ---
+geodata-mode: true
+geodata-loader: standard
+geo-auto-update: true
+geo-update-interval: 24
 geox-url:
-  # geoip: 'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geoip.dat'
-  # geosite: 'https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geosite.dat'
-  mmdb: 'https://geodata.kelee.one/Country-Masaiki.mmdb'
-  asn: 'https://geodata.kelee.one/GeoLite2-ASN-P3TERX.mmdb'
+  mmdb: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geoip.dat
+  geoip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geoip.dat
+  geosite: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geosite.dat
+  asn: https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb
 
 profile:
   store-selected: true
   store-fake-ip: true
 
+# --- 嗅探器优化 ---
 sniffer:
   enable: true
-  force-dns-mapping: true
-  parse-pure-ip: true
-  override-destination: true
+  force-dns-mapping: true  # 强制将嗅探到的域名映射回 IP
+  parse-pure-ip: true      # 对纯 IP 流量也尝试嗅探域名
   sniff:
     HTTP:
       ports: [80, 8080-8880]
@@ -50,251 +44,262 @@ sniffer:
       ports: [443, 8443]
     QUIC:
       ports: [443, 8443]
-  force-domain:
-    - +.v2ex.com
   skip-domain:
-    - Mijia Cloud
+    - "Mijia Cloud"
+    - "+.push.apple.com"
 
+# --- Tun 模式 ---
 tun:
   enable: true
   stack: system
-  # 使用 AdGuard 做 DNS，不再在此加持 53 端口
-  # dns-hijack:
-  #   - any:53
   auto-route: true
   auto-detect-interface: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
 
-# 额外 socks5 入口（可选）
-listeners:
-  - name: socks5-in-1
-    type: socks
-    port: 10808
-    listen: 0.0.0.0
-    udp: true
-    users: []
-    proxy: DIRECT
-
-# DNS 完全交给 AdGuard，Clash/Mihomo 不再管理 DNS
+# --- DNS 深度优化 (配合 AdGuard 必须开启) ---
 dns:
-  enable: false
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: true
+  respect-rules: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  use-hosts: true
+  use-system-hosts: true
+  
+  # 这里的 DNS 用于解析下方 DoH 域名的真实 IP
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  
+  # 默认 DNS (主要处理国内流量)
+  # 如果你有 AdGuard Home，可在这里填入 AdGuard 的 IP，例如: - 192.168.1.5
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  
+  # 代理节点域名解析 DNS
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+  
+  # 强制分流策略 (消除 Fallback 延迟的核心)
+  nameserver-policy:
+    # 强制国外域名走国外 DNS
+    "geosite:geolocation-!cn":
+      - https://1.1.1.1/dns-query
+      - https://dns.google/dns-query
+    # 强制 AI 服务走国外 DNS
+    "rule-set:OpenAI,Claude,Gemini,Copilot":
+      - https://1.1.1.1/dns-query
+      - https://dns.google/dns-query
 
-proxies: []
-
-# 节点计费参数（每 24 小时刷新节点，60 秒健康检查）
-NodeParam: &NodeParam
-  type: http
-  interval: 86400
-  health-check:
-    enable: true
-    url: 'https://cp.cloudflare.com/generate_204'
-    interval: 60
-
-# 计费节点（TODO：改成你的机场计费地址）
+# --- 代理提供商 ---
 proxy-providers:
   我的节点:
-    <<: *NodeParam
-    url: 'https://api.wd-red.com/sub?target=clash&emoji=true&udp=true&scv=true&new_name=true&filename=WestData&url=https%3A%2F%2Fwd-red.com%2Fsubscribe%2Fnxyvnm-p1aasfef-N9zBNh3Id924'
-    path: './proxy_provider/Providers.yaml'
+    type: http
+    # !!! 请在此处填入你的订阅链接 !!!
+    url: https://api.wd-red.com/sub?target=clash&emoji=true&udp=true&scv=true&new_name=true&filename=WestData&url=https%3A%2F%2Fwd-red.com%2Fsubscribe%2Fnxyvnm-p1aasfef-N9zBNh3Id924
+    interval: 3600
+    path: ./providers/my-nodes.yaml
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 150  # 缩短检测间隔，更快发现掉线
+      lazy: true
 
-# 按你现在的命名风格筛选：Hong Kong | 01 / Japan | 03 / United States | 07 / Netherlands | 02 / United Kingdom | 01 ...
-FilterHK: &FilterHK "(?i)Hong Kong"
-FilterTW: &FilterTW "(?i)Taiwan"
-FilterJP: &FilterJP "(?i)Japan"
-FilterSG: &FilterSG "(?i)Singapore"
-FilterUS: &FilterUS "(?i)United States"
-FilterDE: &FilterDE "(?i)Germany"
-FilterUK: &FilterUK "(?i)United Kingdom"
-FilterNL: &FilterNL "(?i)Netherlands"
-
-# 钧点 - 故障转移参数（预留，有需要可以把 url-test 改成 fallback 使用）
-FallBack: &FallBack
-  type: fallback
-  interval: 10
-  lazy: true
-  url: 'https://cp.cloudflare.com/generate_204'
-  disable-udp: false
-  timeout: 3000
-  max-failed-times: 3
-  hidden: true
-  include-all-providers: true
-
-RuleSet: &RuleSet
-  type: http
-  behavior: classical
-  interval: 86400
-  format: yaml
-  proxy: Proxy
-
-proxy-groups:
-  # 顶层总出网控制：
-  # - 显式列出各国家自动组 + DIRECT
-  # - 同时通过 use: 把计费里所有节点也拉进来（你机场的所有节点都可以手动选）
-  - name: Proxy
-    type: select
-    proxies:
-      - AUTO-HK
-      - AUTO-TW
-      - AUTO-JP
-      - AUTO-SG
-      - AUTO-US
-      - AUTO-DE
-      - AUTO-UK
-      - AUTO-NL
-      - DIRECT
-    use:
-      - 我的节点
-
-  # AI 专用：OpenAI / Claude / Perplexity / Copilot / Gemini / Grok 等
-  - name: AI
-    type: select
-    proxies:
-      - AUTO-US
-      - AUTO-DE
-      - AUTO-UK
-      - AUTO-NL
-      - AUTO-HK
-      - AUTO-JP
-      - AUTO-SG
-      - Proxy
-      - DIRECT
-
-  # YouTube 专用：优先亚洲低延迟
-  - name: YouTube
-    type: select
-    proxies:
-      - AUTO-HK
-      - AUTO-TW
-      - AUTO-JP
-      - AUTO-SG
-      - AUTO-US
-      - Proxy
-      - DIRECT
-
-  # GitHub 专用：优先美/欧，其次亚洲
-  - name: GitHub
-    type: select
-    proxies:
-      - AUTO-US
-      - AUTO-DE
-      - AUTO-UK
-      - AUTO-NL
-      - AUTO-HK
-      - AUTO-JP
-      - Proxy
-      - DIRECT
-
-  # 各国家自动测速组（本国节点内 url-test，不跨国）
-  - name: AUTO-HK
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterHK
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
-  - name: AUTO-TW
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterTW
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
-  - name: AUTO-JP
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterJP
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
-  - name: AUTO-SG
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterSG
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
-  - name: AUTO-US
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterUS
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
-  - name: AUTO-DE
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterDE
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
-  - name: AUTO-UK
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterUK
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
-  - name: AUTO-NL
-    type: url-test
-    use:
-      - 我的节点
-    filter: *FilterNL
-    url: https://cp.cloudflare.com/generate_204
-    interval: 300
-
+# --- 规则集提供商 ---
 rule-providers:
-  # 使用 EAlyce 的 OpenAI.list，覆盖绊大多数 AI 相关域名
+  Adobe: # 【新增】Adobe 阻断规则
+    type: http
+    behavior: classical
+    path: ./ruleset/Adobe.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Adobe/Adobe.yaml
+    interval: 86400
   OpenAI:
-    <<: *RuleSet
-    url: "https://raw.githubusercontent.com/EAlyce/conf/refs/heads/main/Rule/OpenAI.list"
-    path: "./RuleSet/OpenAI.list"
-    format: text
+    type: http
+    behavior: classical
+    path: ./ruleset/OpenAI_No_Resolve.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI_No_Resolve.yaml
+    interval: 86400
+  Claude:
+    type: http
+    behavior: classical
+    path: ./ruleset/Claude_No_Resolve.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude_No_Resolve.yaml
+    interval: 86400
+  Gemini:
+    type: http
+    behavior: classical
+    path: ./ruleset/Gemini.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.yaml
+    interval: 86400
+  Copilot:
+    type: http
+    behavior: classical
+    path: ./ruleset/Copilot.yaml
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
+    interval: 86400
 
+# --- 策略组 (已优化 lazy 和 interval) ---
+proxy-groups:
+  - name: 🌐 Proxy
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
+    proxies:
+      - 🌀 AI
+      - 📺 YouTube
+      - 🐙 GitHub
+      - 🇭🇰 HK Auto
+      - 🇨🇳 TW Auto
+      - 🇯🇵 JP Auto
+      - 🇸🇬 SG Auto
+      - 🇺🇸 US Auto
+      - DIRECT
+
+  - name: 🌀 AI
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/OpenAI.png
+    proxies:
+      - 🇺🇸 US Auto
+      - 🇯🇵 JP Auto
+      - 🇸🇬 SG Auto
+      - 🇭🇰 HK Auto
+      - 🌐 Proxy
+
+  - name: 📺 YouTube
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+    proxies:
+      - 🇸🇬 SG Auto
+      - 🇭🇰 HK Auto
+      - 🇯🇵 JP Auto
+      - 🇺🇸 US Auto
+      - 🌐 Proxy
+
+  - name: 🐙 GitHub
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
+    proxies:
+      - 🇺🇸 US Auto
+      - 🇯🇵 JP Auto
+      - 🇸🇬 SG Auto
+      - 🌐 Proxy
+
+  # 地区自动选择组：关闭 lazy 以实现瞬时切换
+  - name: 🇭🇰 HK Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204 # 改为 http 微小提升握手速度
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(香港|港|HK|Hong\s*Kong)
+
+  - name: 🇨🇳 TW Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/CN.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(台湾|台|TW|Taiwan|Taipei)
+
+  - name: 🇯🇵 JP Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/JP.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(日本|日|JP|Japan|Tokyo|Osaka)
+
+  - name: 🇸🇬 SG Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/SG.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(新加坡|狮城|獅城|SG|Singapore)
+
+  - name: 🇺🇸 US Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/US.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(美国|美|US|USA|United\s*States|America)
+
+  - name: 🇩🇪 DE Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/DE.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(德国|德|DE|Germany)
+
+  - name: 🇬🇧 UK Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/UK.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(英国|英|UK|United\s*Kingdom)
+
+  - name: 🇳🇱 NL Auto
+    type: url-test
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/NL.png
+    use: [我的节点]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(荷兰|NL|Netherlands)
+
+# --- 规则 (逻辑顺序已深度优化) ---
 rules:
-  # ======== AI：所有命中 OpenAI.list 的域名/IP 都走 AI 组 ========
-  - RULE-SET,OpenAI,AI
+  # 1. 优先处理 AI 流量
+  - RULE-SET,OpenAI,🌀 AI
+  - RULE-SET,Claude,🌀 AI
+  - RULE-SET,Gemini,🌀 AI
+  - RULE-SET,Copilot,🌀 AI
+  - DOMAIN-SUFFIX,grok.com,🌀 AI
+  - DOMAIN-SUFFIX,x.ai,🌀 AI
 
-  # 兜底补强：以防规则集缺少具有典型域名
-  - DOMAIN-SUFFIX,chatgpt.com,AI
-  - DOMAIN-SUFFIX,openai.com,AI
-  - DOMAIN-SUFFIX,api.openai.com,AI
-  - DOMAIN-SUFFIX,claude.ai,AI
-  - DOMAIN-SUFFIX,perplexity.ai,AI
-  - DOMAIN-SUFFIX,githubcopilot.com,AI
-  - DOMAIN-SUFFIX,copilot.microsoft.com,AI
-  - DOMAIN-SUFFIX,gemini.google.com,AI
+  # 2. 【新增】Adobe 防验证 (REJECT = 阻断)
+  - RULE-SET,Adobe,REJECT
 
-  # Adobe防验证设置
-  - DOMAIN-SUFFIX,adobe.io,REJECT
-  - DOMAIN-SUFFIX,*.adobe.io,REJECT
-  - DOMAIN-SUFFIX,adobestats.io,REJECT
-  - DOMAIN-SUFFIX,photo-api.adobe.io,DIRECT
+  # 3. 局域网与私有地址 (直接直连，不经过内核处理)
+  - GEOSITE,private,DIRECT
+  - GEOSITE,category-ads-all,REJECT # Meta 内核自带去广告(可选)
 
-  # ======== YouTube：视频全部走 YouTube 组（亚洲优先） ========
-  - DOMAIN-SUFFIX,youtube.com,YouTube
-  - DOMAIN-SUFFIX,googlevideo.com,YouTube
-  - DOMAIN-SUFFIX,ytimg.com,YouTube
-  - DOMAIN-SUFFIX,yt3.ggpht.com,YouTube
+  # 4. 常用应用 (使用 GEOSITE 提升匹配速度)
+  - GEOSITE,youtube,📺 YouTube
+  - GEOSITE,github,🐙 GitHub
+  - GEOSITE,steam,🌐 Proxy
+  - GEOSITE,telegram,🌐 Proxy
+  - GEOSITE,netflix,🌐 Proxy
+  - GEOSITE,disney,🌐 Proxy
 
-  # ======== GitHub：代码托管全部走 GitHub 组（US/EU 优先） ========
-  - DOMAIN-SUFFIX,github.com,GitHub
-  - DOMAIN-SUFFIX,githubusercontent.com,GitHub
-  - DOMAIN-SUFFIX,githubassets.com,GitHub
-  - DOMAIN-SUFFIX,ghcr.io,GitHub
-
-  # ======== 局域网 & 国内直达 ========
-  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
-  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
-  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
-  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
-  - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  # 5. 国内流量极速直连 (匹配 CN 域名列表)
+  - GEOSITE,cn,DIRECT
+  
+  # 6. 其他修正规则
+  - DOMAIN-SUFFIX,my.clashverge.dev,DIRECT
+  - DOMAIN-SUFFIX,clashverge.org,DIRECT
+  
+  # 7. 兜底规则
   - GEOIP,CN,DIRECT
-
-  # 其余全部走 Proxy（再由你在 GUI 里选择默认出口）
-  - MATCH,Proxy
+  - MATCH,🌐 Proxy
