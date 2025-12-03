@@ -166,7 +166,6 @@ proxy-groups:
       - 🇯🇵 JP Auto
       - 🇸🇬 SG Auto
       - 🇭🇰 HK Auto
-      - 🌐 Proxy
 
   - name: 📺 YouTube
     type: select
@@ -176,7 +175,7 @@ proxy-groups:
       - 🇭🇰 HK Auto
       - 🇯🇵 JP Auto
       - 🇺🇸 US Auto
-      - 🌐 Proxy
+      - 🇨🇳 TW Auto
 
   - name: 🐙 GitHub
     type: select
@@ -185,7 +184,6 @@ proxy-groups:
       - 🇺🇸 US Auto
       - 🇯🇵 JP Auto
       - 🇸🇬 SG Auto
-      - 🌐 Proxy
 
   # 地区自动选择组：关闭 lazy 以实现瞬时切换
   - name: 🇭🇰 HK Auto
