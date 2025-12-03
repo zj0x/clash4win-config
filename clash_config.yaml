@@ -3,20 +3,21 @@ socks-port: 7891
 mixed-port: 7892
 redir-port: 7893
 tproxy-port: 7894
-ipv6: true
+# 【重要修正】关闭 IPv6，解决 Google 慢/转圈/断流的核心痛点
+ipv6: false
 allow-lan: true
 mode: rule
 log-level: info
 unified-delay: true
 external-controller: 0.0.0.0:9090
 
-# --- 核心优化：连接与并发 ---
-tcp-concurrent: true       # 开启 TCP 并发连接
-keep-alive-interval: 30    # 保持连接活跃，减少握手延迟
-find-process-mode: strict  # 严格模式匹配进程
+# --- 核心优化 ---
+tcp-concurrent: true
+keep-alive-interval: 30
+find-process-mode: strict
 global-client-fingerprint: chrome
 
-# --- Meta 内核 Geo 数据配置 ---
+# --- Meta 内核 Geo 数据 ---
 geodata-mode: true
 geodata-loader: standard
 geo-auto-update: true
@@ -31,11 +32,11 @@ profile:
   store-selected: true
   store-fake-ip: true
 
-# --- 嗅探器优化 ---
+# --- 嗅探器 ---
 sniffer:
   enable: true
-  force-dns-mapping: true  # 强制将嗅探到的域名映射回 IP
-  parse-pure-ip: true      # 对纯 IP 流量也尝试嗅探域名
+  force-dns-mapping: true
+  parse-pure-ip: true
   sniff:
     HTTP:
       ports: [80, 8080-8880]
@@ -46,7 +47,6 @@ sniffer:
       ports: [443, 8443]
   skip-domain:
     - "Mijia Cloud"
-    - "+.push.apple.com"
 
 # --- Tun 模式 ---
 tun:
@@ -58,39 +58,33 @@ tun:
     - any:53
     - tcp://any:53
 
-# --- DNS 深度优化 (配合 AdGuard 必须开启) ---
+# --- DNS 设置 ---
 dns:
   enable: true
   listen: 0.0.0.0:1053
-  ipv6: true
+  # 关闭 DNS 的 IPv6 解析，防止乱跳
+  ipv6: false
   respect-rules: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   use-hosts: true
   use-system-hosts: true
   
-  # 这里的 DNS 用于解析下方 DoH 域名的真实 IP
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
   
-  # 默认 DNS (主要处理国内流量)
-  # 如果你有 AdGuard Home，可在这里填入 AdGuard 的 IP，例如: - 192.168.1.5
   nameserver:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
   
-  # 代理节点域名解析 DNS
   proxy-server-nameserver:
     - https://doh.pub/dns-query
   
-  # 强制分流策略 (消除 Fallback 延迟的核心)
   nameserver-policy:
-    # 强制国外域名走国外 DNS
     "geosite:geolocation-!cn":
       - https://1.1.1.1/dns-query
       - https://dns.google/dns-query
-    # 强制 AI 服务走国外 DNS
     "rule-set:OpenAI,Claude,Gemini,Copilot":
       - https://1.1.1.1/dns-query
       - https://dns.google/dns-query
@@ -99,19 +93,19 @@ dns:
 proxy-providers:
   我的节点:
     type: http
-    # !!! 请在此处填入你的订阅链接 !!!
-    url: https://api.wd-red.com/sub?target=clash&emoji=true&udp=true&scv=true&new_name=true&filename=WestData&url=https%3A%2F%2Fwd-red.com%2Fsubscribe%2Fnxyvnm-p1aasfef-N9zBNh3Id924
+    # ⚠️⚠️⚠️ 请在这里填入你的机场订阅链接 ⚠️⚠️⚠️
+    url: https://example.com/your-subscription-link
     interval: 3600
     path: ./providers/my-nodes.yaml
     health-check:
       enable: true
       url: https://www.gstatic.com/generate_204
-      interval: 150  # 缩短检测间隔，更快发现掉线
+      interval: 300
       lazy: true
 
-# --- 规则集提供商 ---
+# --- 规则集 ---
 rule-providers:
-  Adobe: # 【新增】Adobe 阻断规则
+  Adobe:
     type: http
     behavior: classical
     path: ./ruleset/Adobe.yaml
@@ -142,15 +136,16 @@ rule-providers:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
     interval: 86400
 
-# --- 策略组 (已优化 lazy 和 interval) ---
+# --- 策略组 (解决节点显示和AI地区问题) ---
 proxy-groups:
+  # 1. 主策略组
   - name: 🌐 Proxy
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
     proxies:
       - 🌀 AI
+      - 🚀 手动切换  # 【新增】方便你手动选节点
       - 📺 YouTube
-      - 🐙 GitHub
       - 🇭🇰 HK Auto
       - 🇨🇳 TW Auto
       - 🇯🇵 JP Auto
@@ -158,14 +153,22 @@ proxy-groups:
       - 🇺🇸 US Auto
       - DIRECT
 
+  # 2. AI 专用组 (关键修正：移除了 HK 节点)
   - name: 🌀 AI
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/OpenAI.png
     proxies:
-      - 🇺🇸 US Auto
-      - 🇯🇵 JP Auto
-      - 🇸🇬 SG Auto
-      - 🇭🇰 HK Auto
+      - 🇺🇸 US Auto  # AI 首选美国
+      - 🇸🇬 SG Auto  # 备选新加坡
+      - 🇯🇵 JP Auto  # 备选日本
+      - 🚀 手动切换 # 允许手动强制指定
+
+  # 3. 【新增】显示所有节点，方便手动选择
+  - name: 🚀 手动切换
+    type: select
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/Static.png
+    use:
+      - 我的节点  # 这里会拉取显示你所有的机场节点
 
   - name: 📺 YouTube
     type: select
@@ -175,7 +178,7 @@ proxy-groups:
       - 🇭🇰 HK Auto
       - 🇯🇵 JP Auto
       - 🇺🇸 US Auto
-      - 🇨🇳 TW Auto
+      - 🚀 手动切换
 
   - name: 🐙 GitHub
     type: select
@@ -184,13 +187,14 @@ proxy-groups:
       - 🇺🇸 US Auto
       - 🇯🇵 JP Auto
       - 🇸🇬 SG Auto
+      - 🚀 手动切换
 
-  # 地区自动选择组：关闭 lazy 以实现瞬时切换
+  # 地区自动选择组
   - name: 🇭🇰 HK Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204 # 改为 http 微小提升握手速度
+    url: http://www.gstatic.com/generate_204
     interval: 150
     tolerance: 50
     lazy: false
@@ -266,9 +270,12 @@ proxy-groups:
     lazy: false
     filter: (?i)(荷兰|NL|Netherlands)
 
-# --- 规则 (逻辑顺序已深度优化) ---
+# --- 规则 ---
 rules:
-  # 1. 优先处理 AI 流量
+  # 1. 拦截 Google QUIC (UDP)，解决 Google 慢/卡顿
+  - AND,((PROTOCOL,UDP),(OR,((DOMAIN-SUFFIX,google.com),(DOMAIN-SUFFIX,youtube.com)))),REJECT
+
+  # 2. AI 规则
   - RULE-SET,OpenAI,🌀 AI
   - RULE-SET,Claude,🌀 AI
   - RULE-SET,Gemini,🌀 AI
@@ -276,28 +283,27 @@ rules:
   - DOMAIN-SUFFIX,grok.com,🌀 AI
   - DOMAIN-SUFFIX,x.ai,🌀 AI
 
-  # 2. 【新增】Adobe 防验证 (REJECT = 阻断)
+  # 3. Adobe 阻断
   - RULE-SET,Adobe,REJECT
 
-  # 3. 局域网与私有地址 (直接直连，不经过内核处理)
+  # 4. 局域网直连
   - GEOSITE,private,DIRECT
-  - GEOSITE,category-ads-all,REJECT # Meta 内核自带去广告(可选)
+  - GEOSITE,category-ads-all,REJECT
 
-  # 4. 常用应用 (使用 GEOSITE 提升匹配速度)
+  # 5. 常用服务
   - GEOSITE,youtube,📺 YouTube
   - GEOSITE,github,🐙 GitHub
   - GEOSITE,steam,🌐 Proxy
   - GEOSITE,telegram,🌐 Proxy
   - GEOSITE,netflix,🌐 Proxy
-  - GEOSITE,disney,🌐 Proxy
 
-  # 5. 国内流量极速直连 (匹配 CN 域名列表)
+  # 6. 国内直连
   - GEOSITE,cn,DIRECT
   
-  # 6. 其他修正规则
+  # 7. 防止回环
   - DOMAIN-SUFFIX,my.clashverge.dev,DIRECT
   - DOMAIN-SUFFIX,clashverge.org,DIRECT
   
-  # 7. 兜底规则
+  # 8. 兜底
   - GEOIP,CN,DIRECT
   - MATCH,🌐 Proxy
