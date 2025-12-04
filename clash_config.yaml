@@ -3,7 +3,6 @@ socks-port: 7891
 mixed-port: 7892
 redir-port: 7893
 tproxy-port: 7894
-# 保持关闭 IPv6，防止 Google 转圈
 ipv6: false
 allow-lan: true
 mode: rule
@@ -12,12 +11,13 @@ unified-delay: true
 external-controller: 0.0.0.0:9090
 
 # --- 核心优化 ---
+# 【已开启】遵循官方建议，并发握手以选出最快 IP
 tcp-concurrent: true
-keep-alive-interval: 30
+keep-alive-interval: 1800
 find-process-mode: strict
 global-client-fingerprint: chrome
 
-# --- Meta 内核 Geo 数据 ---
+# --- Meta Geo 数据 ---
 geodata-mode: true
 geodata-loader: standard
 geo-auto-update: true
@@ -32,21 +32,25 @@ profile:
   store-selected: true
   store-fake-ip: true
 
-# --- 嗅探器 ---
+# --- 嗅探器优化 (稳定核心) ---
 sniffer:
   enable: true
-  force-dns-mapping: true
   parse-pure-ip: true
+  force-dns-mapping: false
   sniff:
     HTTP:
       ports: [80, 8080-8880]
-      override-destination: true
+      override-destination: false # 关键：只匹配规则，不修改目标 IP
     TLS:
       ports: [443, 8443]
+      override-destination: false # 关键：同上
     QUIC:
       ports: [443, 8443]
+      override-destination: false
   skip-domain:
     - "Mijia Cloud"
+    - "+.push.apple.com" # 【新增】借鉴官方示例：跳过苹果推送嗅探
+    - "+.apple.com"      # 【新增】借鉴官方示例：跳过苹果服务嗅探
 
 # --- Tun 模式 ---
 tun:
@@ -57,8 +61,9 @@ tun:
   dns-hijack:
     - any:53
     - tcp://any:53
+  mtu: 1400
 
-# --- DNS 设置 ---
+# --- DNS 设置 (UDP 极速模式) ---
 dns:
   enable: true
   listen: 0.0.0.0:1053
@@ -74,19 +79,20 @@ dns:
     - 119.29.29.29
   
   nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
   
   proxy-server-nameserver:
-    - https://doh.pub/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
   
   nameserver-policy:
     "geosite:geolocation-!cn":
-      - https://1.1.1.1/dns-query
-      - https://dns.google/dns-query
+      - 8.8.8.8
+      - 1.1.1.1
     "rule-set:OpenAI,Claude,Gemini,Copilot":
-      - https://1.1.1.1/dns-query
-      - https://dns.google/dns-query
+      - 8.8.8.8
+      - 1.1.1.1
 
 # --- 代理提供商 ---
 proxy-providers:
@@ -98,7 +104,7 @@ proxy-providers:
     path: ./providers/my-nodes.yaml
     health-check:
       enable: true
-      url: https://www.gstatic.com/generate_204
+      url: http://www.gstatic.com/generate_204
       interval: 300
       lazy: true
 
@@ -153,7 +159,7 @@ proxy-groups:
 
   - name: 🌀 AI
     type: select
-    icon: https://github.com/Koolson/Qure/blob/master/IconSet/Color/AI.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/OpenAI.png
     proxies:
       - 🇺🇸 US Auto
       - 🇸🇬 SG Auto
@@ -181,7 +187,6 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
     proxies:
       - 🇺🇸 US Auto
-      - 🇭🇰 HK Auto
       - 🇯🇵 JP Auto
       - 🇸🇬 SG Auto
       - 🚀 手动切换
@@ -269,12 +274,12 @@ proxy-groups:
 
 # --- 规则 ---
 rules:
-  # 1. 拦截 Google QUIC (UDP) -> 修正后的写法 (NETWORK 代替 PROTOCOL)
+  # 1. 拦截 Google UDP (QUIC)
   - AND,((NETWORK,UDP),(OR,((DOMAIN-SUFFIX,google.com),(DOMAIN-SUFFIX,youtube.com)))),REJECT
 
   # 2. AI 规则
-  - DOMAIN-SUFFIX,notebooklm.google.com,🌀 AI  # 【新增】强制 NotebookLLM 走 AI 组
-  - DOMAIN-KEYWORD,notebooklm,🌀 AI             # 【新增】兜底规则
+  - DOMAIN-SUFFIX,notebooklm.google.com,🌀 AI
+  - DOMAIN-KEYWORD,notebooklm,🌀 AI
   - RULE-SET,OpenAI,🌀 AI
   - RULE-SET,Claude,🌀 AI
   - RULE-SET,Gemini,🌀 AI
@@ -295,6 +300,10 @@ rules:
   - GEOSITE,steam,🌐 Proxy
   - GEOSITE,telegram,🌐 Proxy
   - GEOSITE,netflix,🌐 Proxy
+
+  # 【新增】借鉴官方示例：微软/苹果国内服务强制直连
+  - GEOSITE,microsoft@cn,DIRECT
+  - GEOSITE,apple@cn,DIRECT
 
   # 6. 国内直连
   - GEOSITE,cn,DIRECT
