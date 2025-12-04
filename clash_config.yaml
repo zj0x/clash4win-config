@@ -3,7 +3,7 @@ socks-port: 7891
 mixed-port: 7892
 redir-port: 7893
 tproxy-port: 7894
-# 【稳定之源】关闭 IPv6，防止 Google/Netflix 识别错误或转圈
+# 保持 IPv6 关闭以确保稳定
 ipv6: false
 allow-lan: true
 mode: rule
@@ -12,9 +12,7 @@ unified-delay: true
 external-controller: 0.0.0.0:9090
 
 # --- 核心性能优化 ---
-# 【低延迟关键】开启并发握手，毫秒级响应
 tcp-concurrent: true
-# 适当的保活时间，减少重复握手消耗
 keep-alive-interval: 600
 find-process-mode: strict
 global-client-fingerprint: chrome
@@ -34,11 +32,10 @@ profile:
   store-selected: true
   store-fake-ip: true
 
-# --- 嗅探器 (NotebookLLM 必需) ---
+# --- 嗅探器 ---
 sniffer:
   enable: true
   parse-pure-ip: true
-  # 【防卡顿关键】只嗅探域名用于分流，不强制重写目标 IP，防止握手超时
   force-dns-mapping: false
   sniff:
     HTTP:
@@ -64,10 +61,9 @@ tun:
   dns-hijack:
     - any:53
     - tcp://any:53
-  # 设置保守 MTU，防止分片导致的丢包
   mtu: 1400
 
-# --- DNS 设置 (速度与稳定兼得) ---
+# --- DNS 设置 ---
 dns:
   enable: true
   listen: 0.0.0.0:1053
@@ -78,24 +74,20 @@ dns:
   use-hosts: true
   use-system-hosts: true
   
-  # 默认 DNS (国内)：使用阿里/腾讯的 UDP，追求毫秒级解析
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
   
-  # 主 nameserver (优先并发查询这些)
   nameserver:
     - 223.5.5.5
     - 119.29.29.29
-    - https://doh.pub/dns-query # 腾讯 DoH 作为防污染备份
+    - https://doh.pub/dns-query
   
-  # Fallback (国外兜底)：当国内 DNS 无法解析或污染时，回落到这里
   fallback:
     - https://1.1.1.1/dns-query
     - https://dns.google/dns-query
     - tcp://8.8.8.8
   
-  # 过滤器：防止国内域名误走 Fallback 变慢
   fallback-filter:
     geoip: true
     geoip-code: CN
@@ -108,10 +100,9 @@ dns:
 
 # --- 代理提供商 ---
 proxy-providers:
-  # ✈️ 我的机场
   My_Airport:
     type: http
-    # 🛑🛑🛑 请填入你的机场订阅链接 🛑🛑🛑
+    # 🛑🛑🛑 【必须修改】请填入你的机场订阅链接 🛑🛑🛑
     url: https://api.wd-red.com/sub?target=clash&emoji=true&udp=true&scv=true&new_name=true&filename=WestData&url=https%3A%2F%2Fwd-red.com%2Fsubscribe%2Fnxyvnm-p1aasfef-N9zBNh3Id924
     interval: 3600
     path: ./providers/my_airport.yaml
@@ -121,59 +112,58 @@ proxy-providers:
       interval: 300
       lazy: true
 
-# --- 策略组 (已移除备用机场，图标已修复) ---
+# --- 策略组 (名称纯英文，使用 icon 字段显示图标) ---
 proxy-groups:
-  - name: 🌐 Proxy
+  - name: Proxy
     type: select
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/Global.png
     proxies:
-      - 🌀 AI
-      - 🚀 手动切换
-      - 📺 YouTube
-      - 🇭🇰 HK Auto
-      - 🇨🇳 TW Auto
-      - 🇯🇵 JP Auto
-      - 🇸🇬 SG Auto
-      - 🇺🇸 US Auto
+      - AI
+      - Manual
+      - YouTube
+      - HK
+      - TW
+      - JP
+      - SG
+      - US
       - DIRECT
 
-  - name: 🌀 AI
+  - name: AI
     type: select
-    # 使用 Orz-3 的 OpenAI 图标
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/OpenAI.png
     proxies:
-      - 🇺🇸 US Auto
-      - 🇸🇬 SG Auto
-      - 🇯🇵 JP Auto
-      - 🚀 手动切换
+      - US
+      - SG
+      - JP
+      - Manual
 
-  - name: 🚀 手动切换
+  - name: Manual
     type: select
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/Static.png
     use:
       - My_Airport
 
-  - name: 📺 YouTube
+  - name: YouTube
     type: select
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/YouTube.png
     proxies:
-      - 🇸🇬 SG Auto
-      - 🇭🇰 HK Auto
-      - 🇯🇵 JP Auto
-      - 🇺🇸 US Auto
-      - 🚀 手动切换
+      - SG
+      - HK
+      - JP
+      - US
+      - Manual
 
-  - name: 🐙 GitHub
+  - name: GitHub
     type: select
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/GitHub.png
     proxies:
-      - 🇺🇸 US Auto
-      - 🇯🇵 JP Auto
-      - 🇸🇬 SG Auto
-      - 🚀 手动切换
+      - US
+      - JP
+      - SG
+      - Manual
 
   # --- 地区自动选择 ---
-  - name: 🇭🇰 HK Auto
+  - name: HK
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/HK.png
     use: [My_Airport]
@@ -183,7 +173,7 @@ proxy-groups:
     lazy: false
     filter: (?i)(香港|港|HK|Hong\s*Kong)
 
-  - name: 🇨🇳 TW Auto
+  - name: TW
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/CN.png
     use: [My_Airport]
@@ -193,7 +183,7 @@ proxy-groups:
     lazy: false
     filter: (?i)(台湾|台|TW|Taiwan|Taipei)
 
-  - name: 🇯🇵 JP Auto
+  - name: JP
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/JP.png
     use: [My_Airport]
@@ -203,7 +193,7 @@ proxy-groups:
     lazy: false
     filter: (?i)(日本|日|JP|Japan|Tokyo|Osaka)
 
-  - name: 🇸🇬 SG Auto
+  - name: SG
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/SG.png
     use: [My_Airport]
@@ -213,7 +203,7 @@ proxy-groups:
     lazy: false
     filter: (?i)(新加坡|狮城|獅城|SG|Singapore)
 
-  - name: 🇺🇸 US Auto
+  - name: US
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/US.png
     use: [My_Airport]
@@ -223,7 +213,7 @@ proxy-groups:
     lazy: false
     filter: (?i)(美国|美|US|USA|United\s*States|America)
 
-  - name: 🇩🇪 DE Auto
+  - name: DE
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/DE.png
     use: [My_Airport]
@@ -233,7 +223,7 @@ proxy-groups:
     lazy: false
     filter: (?i)(德国|德|DE|Germany)
 
-  - name: 🇬🇧 UK Auto
+  - name: UK
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/UK.png
     use: [My_Airport]
@@ -243,7 +233,7 @@ proxy-groups:
     lazy: false
     filter: (?i)(英国|英|UK|United\s*Kingdom)
 
-  - name: 🇳🇱 NL Auto
+  - name: NL
     type: url-test
     icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/NL.png
     use: [My_Airport]
@@ -253,61 +243,35 @@ proxy-groups:
     lazy: false
     filter: (?i)(荷兰|NL|Netherlands)
 
-# --- 规则 ---
+# --- 规则 (已引用纯英文组名，无 Emoji) ---
 rules:
-  - AND,((NETWORK,UDP),(OR,((DOMAIN-SUFFIX,google.com),(DOMAIN-SUFFIX,youtube.com)))),REJECT
-  - DOMAIN-SUFFIX,notebooklm.google.com,🌀 AI
-  - DOMAIN-KEYWORD,notebooklm,🌀 AI
-  - RULE-SET,OpenAI,🌀 AI
-  - RULE-SET,Claude,🌀 AI
-  - RULE-SET,Gemini,🌀 AI
-  - RULE-SET,Copilot,🌀 AI
-  - DOMAIN-SUFFIX,grok.com,🌀 AI
-  - DOMAIN-SUFFIX,x.ai,🌀 AI
+  - DST-PORT,443,REJECT,udp
+  
+  # AI
+  - DOMAIN-SUFFIX,notebooklm.google.com,AI
+  - DOMAIN-KEYWORD,notebooklm,AI
+  - RULE-SET,OpenAI,AI
+  - RULE-SET,Claude,AI
+  - RULE-SET,Gemini,AI
+  - RULE-SET,Copilot,AI
+  - DOMAIN-SUFFIX,grok.com,AI
+  - DOMAIN-SUFFIX,x.ai,AI
+  
   - RULE-SET,Adobe,REJECT
+
+  # 直连
   - GEOSITE,private,DIRECT
   - GEOSITE,category-ads-all,REJECT
   - GEOSITE,microsoft@cn,DIRECT
   - GEOSITE,apple@cn,DIRECT
-  - GEOSITE,youtube,📺 YouTube
-  - GEOSITE,github,🐙 GitHub
-  - GEOSITE,steam,🌐 Proxy
-  - GEOSITE,telegram,🌐 Proxy
-  - GEOSITE,netflix,🌐 Proxy
+
+  # 应用分流
+  - GEOSITE,youtube,YouTube
+  - GEOSITE,github,GitHub
+  - GEOSITE,steam,Proxy
+  - GEOSITE,telegram,Proxy
+  - GEOSITE,netflix,Proxy
+
+  # 兜底
   - GEOSITE,cn,DIRECT
   - DOMAIN-SUFFIX,my.clashverge.dev,DIRECT
-  - DOMAIN-SUFFIX,clashverge.org,DIRECT
-  - GEOIP,CN,DIRECT
-  - MATCH,🌐 Proxy
-
-rule-providers:
-  Adobe:
-    type: http
-    behavior: classical
-    path: ./ruleset/Adobe.yaml
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Adobe/Adobe.yaml
-    interval: 86400
-  OpenAI:
-    type: http
-    behavior: classical
-    path: ./ruleset/OpenAI_No_Resolve.yaml
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI_No_Resolve.yaml
-    interval: 86400
-  Claude:
-    type: http
-    behavior: classical
-    path: ./ruleset/Claude_No_Resolve.yaml
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude_No_Resolve.yaml
-    interval: 86400
-  Gemini:
-    type: http
-    behavior: classical
-    path: ./ruleset/Gemini.yaml
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.yaml
-    interval: 86400
-  Copilot:
-    type: http
-    behavior: classical
-    path: ./ruleset/Copilot.yaml
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
-    interval: 86400
