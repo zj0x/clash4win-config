@@ -106,7 +106,7 @@ proxy-providers:
   我的节点:
     type: http
     # ⚠️⚠️⚠️ 请在这里填入你的机场订阅链接 ⚠️⚠️⚠️
-    url: 
+    url: https://api.wd-red.com/sub?target=clash&emoji=true&udp=true&scv=true&new_name=true&filename=WestData&url=https%3A%2F%2Fwd-red.com%2Fsubscribe%2Fnxyvnm-p1aasfef-N9zBNh3Id924
     interval: 3600
     path: ./providers/my-nodes.yaml
     health-check:
