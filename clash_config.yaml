@@ -3,6 +3,7 @@ socks-port: 7891
 mixed-port: 7892
 redir-port: 7893
 tproxy-port: 7894
+# 【稳定之源】关闭 IPv6，防止 Google/Netflix 识别错误或转圈
 ipv6: false
 allow-lan: true
 mode: rule
@@ -10,10 +11,11 @@ log-level: info
 unified-delay: true
 external-controller: 0.0.0.0:9090
 
-# --- 核心优化 ---
-# 【已开启】遵循官方建议，并发握手以选出最快 IP
+# --- 核心性能优化 ---
+# 【低延迟关键】开启并发握手，毫秒级响应
 tcp-concurrent: true
-keep-alive-interval: 1800
+# 适当的保活时间，减少重复握手消耗
+keep-alive-interval: 600
 find-process-mode: strict
 global-client-fingerprint: chrome
 
@@ -32,25 +34,26 @@ profile:
   store-selected: true
   store-fake-ip: true
 
-# --- 嗅探器优化 (稳定核心) ---
+# --- 嗅探器 (NotebookLLM 必需) ---
 sniffer:
   enable: true
   parse-pure-ip: true
+  # 【防卡顿关键】只嗅探域名用于分流，不强制重写目标 IP，防止握手超时
   force-dns-mapping: false
   sniff:
     HTTP:
       ports: [80, 8080-8880]
-      override-destination: false # 关键：只匹配规则，不修改目标 IP
+      override-destination: false
     TLS:
       ports: [443, 8443]
-      override-destination: false # 关键：同上
+      override-destination: false
     QUIC:
       ports: [443, 8443]
       override-destination: false
   skip-domain:
     - "Mijia Cloud"
-    - "+.push.apple.com" # 【新增】借鉴官方示例：跳过苹果推送嗅探
-    - "+.apple.com"      # 【新增】借鉴官方示例：跳过苹果服务嗅探
+    - "+.push.apple.com"
+    - "+.apple.com"
 
 # --- Tun 模式 ---
 tun:
@@ -61,9 +64,10 @@ tun:
   dns-hijack:
     - any:53
     - tcp://any:53
+  # 设置保守 MTU，防止分片导致的丢包
   mtu: 1400
 
-# --- DNS 设置 (UDP 极速模式) ---
+# --- DNS 设置 (速度与稳定兼得) ---
 dns:
   enable: true
   listen: 0.0.0.0:1053
@@ -74,41 +78,208 @@ dns:
   use-hosts: true
   use-system-hosts: true
   
+  # 默认 DNS (国内)：使用阿里/腾讯的 UDP，追求毫秒级解析
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
   
+  # 主 nameserver (优先并发查询这些)
   nameserver:
     - 223.5.5.5
     - 119.29.29.29
+    - https://doh.pub/dns-query # 腾讯 DoH 作为防污染备份
   
-  proxy-server-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
+  # Fallback (国外兜底)：当国内 DNS 无法解析或污染时，回落到这里
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://dns.google/dns-query
+    - tcp://8.8.8.8
   
-  nameserver-policy:
-    "geosite:geolocation-!cn":
-      - 8.8.8.8
-      - 1.1.1.1
-    "rule-set:OpenAI,Claude,Gemini,Copilot":
-      - 8.8.8.8
-      - 1.1.1.1
+  # 过滤器：防止国内域名误走 Fallback 变慢
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+    domain:
+      - '+.google.com'
+      - '+.facebook.com'
+      - '+.youtube.com'
 
 # --- 代理提供商 ---
 proxy-providers:
-  我的节点:
+  # ✈️ 我的机场
+  My_Airport:
     type: http
-    # ⚠️⚠️⚠️ 请在这里填入你的机场订阅链接 ⚠️⚠️⚠️
+    # 🛑🛑🛑 请填入你的机场订阅链接 🛑🛑🛑
     url: https://api.wd-red.com/sub?target=clash&emoji=true&udp=true&scv=true&new_name=true&filename=WestData&url=https%3A%2F%2Fwd-red.com%2Fsubscribe%2Fnxyvnm-p1aasfef-N9zBNh3Id924
     interval: 3600
-    path: ./providers/my-nodes.yaml
+    path: ./providers/my_airport.yaml
     health-check:
       enable: true
       url: http://www.gstatic.com/generate_204
       interval: 300
       lazy: true
 
-# --- 规则集 ---
+# --- 策略组 (已移除备用机场，图标已修复) ---
+proxy-groups:
+  - name: 🌐 Proxy
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/Global.png
+    proxies:
+      - 🌀 AI
+      - 🚀 手动切换
+      - 📺 YouTube
+      - 🇭🇰 HK Auto
+      - 🇨🇳 TW Auto
+      - 🇯🇵 JP Auto
+      - 🇸🇬 SG Auto
+      - 🇺🇸 US Auto
+      - DIRECT
+
+  - name: 🌀 AI
+    type: select
+    # 使用 Orz-3 的 OpenAI 图标
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/OpenAI.png
+    proxies:
+      - 🇺🇸 US Auto
+      - 🇸🇬 SG Auto
+      - 🇯🇵 JP Auto
+      - 🚀 手动切换
+
+  - name: 🚀 手动切换
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/Static.png
+    use:
+      - My_Airport
+
+  - name: 📺 YouTube
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/YouTube.png
+    proxies:
+      - 🇸🇬 SG Auto
+      - 🇭🇰 HK Auto
+      - 🇯🇵 JP Auto
+      - 🇺🇸 US Auto
+      - 🚀 手动切换
+
+  - name: 🐙 GitHub
+    type: select
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/GitHub.png
+    proxies:
+      - 🇺🇸 US Auto
+      - 🇯🇵 JP Auto
+      - 🇸🇬 SG Auto
+      - 🚀 手动切换
+
+  # --- 地区自动选择 ---
+  - name: 🇭🇰 HK Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/HK.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(香港|港|HK|Hong\s*Kong)
+
+  - name: 🇨🇳 TW Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/CN.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(台湾|台|TW|Taiwan|Taipei)
+
+  - name: 🇯🇵 JP Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/JP.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(日本|日|JP|Japan|Tokyo|Osaka)
+
+  - name: 🇸🇬 SG Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/SG.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(新加坡|狮城|獅城|SG|Singapore)
+
+  - name: 🇺🇸 US Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/US.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(美国|美|US|USA|United\s*States|America)
+
+  - name: 🇩🇪 DE Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/DE.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(德国|德|DE|Germany)
+
+  - name: 🇬🇧 UK Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/UK.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(英国|英|UK|United\s*Kingdom)
+
+  - name: 🇳🇱 NL Auto
+    type: url-test
+    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/NL.png
+    use: [My_Airport]
+    url: http://www.gstatic.com/generate_204
+    interval: 150
+    tolerance: 50
+    lazy: false
+    filter: (?i)(荷兰|NL|Netherlands)
+
+# --- 规则 ---
+rules:
+  - AND,((NETWORK,UDP),(OR,((DOMAIN-SUFFIX,google.com),(DOMAIN-SUFFIX,youtube.com)))),REJECT
+  - DOMAIN-SUFFIX,notebooklm.google.com,🌀 AI
+  - DOMAIN-KEYWORD,notebooklm,🌀 AI
+  - RULE-SET,OpenAI,🌀 AI
+  - RULE-SET,Claude,🌀 AI
+  - RULE-SET,Gemini,🌀 AI
+  - RULE-SET,Copilot,🌀 AI
+  - DOMAIN-SUFFIX,grok.com,🌀 AI
+  - DOMAIN-SUFFIX,x.ai,🌀 AI
+  - RULE-SET,Adobe,REJECT
+  - GEOSITE,private,DIRECT
+  - GEOSITE,category-ads-all,REJECT
+  - GEOSITE,microsoft@cn,DIRECT
+  - GEOSITE,apple@cn,DIRECT
+  - GEOSITE,youtube,📺 YouTube
+  - GEOSITE,github,🐙 GitHub
+  - GEOSITE,steam,🌐 Proxy
+  - GEOSITE,telegram,🌐 Proxy
+  - GEOSITE,netflix,🌐 Proxy
+  - GEOSITE,cn,DIRECT
+  - DOMAIN-SUFFIX,my.clashverge.dev,DIRECT
+  - DOMAIN-SUFFIX,clashverge.org,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,🌐 Proxy
+
 rule-providers:
   Adobe:
     type: http
@@ -140,178 +311,3 @@ rule-providers:
     path: ./ruleset/Copilot.yaml
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
     interval: 86400
-
-# --- 策略组 ---
-proxy-groups:
-  - name: 🌐 Proxy
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
-    proxies:
-      - 🌀 AI
-      - 🚀 手动切换
-      - 📺 YouTube
-      - 🇭🇰 HK Auto
-      - 🇨🇳 TW Auto
-      - 🇯🇵 JP Auto
-      - 🇸🇬 SG Auto
-      - 🇺🇸 US Auto
-      - DIRECT
-
-  - name: 🌀 AI
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/OpenAI.png
-    proxies:
-      - 🇺🇸 US Auto
-      - 🇸🇬 SG Auto
-      - 🇯🇵 JP Auto
-      - 🚀 手动切换
-
-  - name: 🚀 手动切换
-    type: select
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/Static.png
-    use:
-      - 我的节点
-
-  - name: 📺 YouTube
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
-    proxies:
-      - 🇸🇬 SG Auto
-      - 🇭🇰 HK Auto
-      - 🇯🇵 JP Auto
-      - 🇺🇸 US Auto
-      - 🚀 手动切换
-
-  - name: 🐙 GitHub
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
-    proxies:
-      - 🇺🇸 US Auto
-      - 🇯🇵 JP Auto
-      - 🇸🇬 SG Auto
-      - 🚀 手动切换
-
-  # 地区自动选择组
-  - name: 🇭🇰 HK Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(香港|港|HK|Hong\s*Kong)
-
-  - name: 🇨🇳 TW Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/CN.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(台湾|台|TW|Taiwan|Taipei)
-
-  - name: 🇯🇵 JP Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/JP.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(日本|日|JP|Japan|Tokyo|Osaka)
-
-  - name: 🇸🇬 SG Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/SG.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(新加坡|狮城|獅城|SG|Singapore)
-
-  - name: 🇺🇸 US Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/US.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(美国|美|US|USA|United\s*States|America)
-
-  - name: 🇩🇪 DE Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/DE.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(德国|德|DE|Germany)
-
-  - name: 🇬🇧 UK Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/UK.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(英国|英|UK|United\s*Kingdom)
-
-  - name: 🇳🇱 NL Auto
-    type: url-test
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/NL.png
-    use: [我的节点]
-    url: http://www.gstatic.com/generate_204
-    interval: 150
-    tolerance: 50
-    lazy: false
-    filter: (?i)(荷兰|NL|Netherlands)
-
-# --- 规则 ---
-rules:
-  # 1. 拦截 Google UDP (QUIC)
-  - AND,((NETWORK,UDP),(OR,((DOMAIN-SUFFIX,google.com),(DOMAIN-SUFFIX,youtube.com)))),REJECT
-
-  # 2. AI 规则
-  - DOMAIN-SUFFIX,notebooklm.google.com,🌀 AI
-  - DOMAIN-KEYWORD,notebooklm,🌀 AI
-  - RULE-SET,OpenAI,🌀 AI
-  - RULE-SET,Claude,🌀 AI
-  - RULE-SET,Gemini,🌀 AI
-  - RULE-SET,Copilot,🌀 AI
-  - DOMAIN-SUFFIX,grok.com,🌀 AI
-  - DOMAIN-SUFFIX,x.ai,🌀 AI
-
-  # 3. Adobe 阻断
-  - RULE-SET,Adobe,REJECT
-
-  # 4. 局域网直连
-  - GEOSITE,private,DIRECT
-  - GEOSITE,category-ads-all,REJECT
-
-  # 5. 常用服务
-  - GEOSITE,youtube,📺 YouTube
-  - GEOSITE,github,🐙 GitHub
-  - GEOSITE,steam,🌐 Proxy
-  - GEOSITE,telegram,🌐 Proxy
-  - GEOSITE,netflix,🌐 Proxy
-
-  # 【新增】借鉴官方示例：微软/苹果国内服务强制直连
-  - GEOSITE,microsoft@cn,DIRECT
-  - GEOSITE,apple@cn,DIRECT
-
-  # 6. 国内直连
-  - GEOSITE,cn,DIRECT
-  
-  # 7. 防止回环
-  - DOMAIN-SUFFIX,my.clashverge.dev,DIRECT
-  - DOMAIN-SUFFIX,clashverge.org,DIRECT
-  
-  # 8. 兜底
-  - GEOIP,CN,DIRECT
-  - MATCH,🌐 Proxy
