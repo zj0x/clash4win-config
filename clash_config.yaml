@@ -272,7 +272,7 @@ proxy-groups:
 
   - name: 🔍 Google
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/refs/heads/master/IconSet/Color/Google_Search.png
     proxies:
       - 🇸🇬 SG Auto
       - 🇭🇰 HK Auto
