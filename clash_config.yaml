@@ -1,8 +1,8 @@
 port: 7890
 socks-port: 7891
 mixed-port: 7892
-redir-port: 7893
-tproxy-port: 7894
+# redir-port: 7893
+# tproxy-port: 7894
 ipv6: false
 allow-lan: true
 mode: rule
@@ -15,6 +15,7 @@ external-controller: 0.0.0.0:9090
 tcp-concurrent: true
 # ⚠️ [优化] 将 600 改为 30，防止运营商 NAT 掐断空闲连接导致卡顿
 keep-alive-interval: 30
+tcp-no-delay: true
 find-process-mode: strict
 global-client-fingerprint: chrome
 
@@ -38,32 +39,34 @@ sniffer:
   enable: true
   parse-pure-ip: true
   force-dns-mapping: true # ⚠️ [优化] 改为 true，不仅嗅探，还将嗅探到的域名反向映射回 DNS 缓存，提高准确率
-  override-destination: false 
+  override-destination: true
   sniff:
     HTTP:
       ports: [80, 8080-8880]
-      override-destination: false
+      override-destination: true
     TLS:
       ports: [443, 8443]
-      override-destination: false
+      override-destination: true
     QUIC:
       ports: [443, 8443]
-      override-destination: false
+      override-destination: true
   skip-domain:
     - "Mijia Cloud"
     - "+.push.apple.com"
+    - "dns.alidns.com"
+    - "doh.pub"
     - "+.apple.com"
 
 # --- Tun 模式 ---
 tun:
   enable: true
-  stack: mixed # ⚠️ [优化] system 改为 mixed，兼容性更好，减少 Windows 下的玄学断流
+  stack: gvisor # ⚠️ [优化] system 改为 mixed，兼容性更好，减少 Windows 下的玄学断流
   auto-route: true
   auto-detect-interface: true
   dns-hijack:
     - any:53
     - tcp://any:53
-  mtu: 9000 # ⚠️ [优化] 如果是千兆局域网，可尝试 9000 (Jumbo Frame) 或保持 1400/1500。保守设置保持 1400 即可。
+  mtu: 1400 # ⚠️ [优化] 如果是千兆局域网，可尝试 9000 (Jumbo Frame) 或保持 1400/1500。保守设置保持 1400 即可。
 
 # --- DNS 设置 (速度核心) ---
 dns:
@@ -73,15 +76,74 @@ dns:
   respect-rules: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+
+  fake-ip-filter:
+    - "+.lan"
+    - "+.local"
+    - "msftconnecttest.com"
+    - "msftncsi.com"
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "*.msftconnecttest.com"
+    - "*.msftncsi.com"
+    - "msftconnecttest.com"
+    - "msftncsi.com"
+    - "*.stun.*.*"
+    - "stun.*.*"
+    - "stun.*.*.*"
+    - "+.srv.nintendo.net"
+    - "+.stun.playstation.net"
+    - "xbox.*.*.microsoft.com"
+    - "+.xboxlive.com"
+    - "+.battlenet.com.cn"
+    - "+.wotgame.cn"
+    - "+.wggames.cn"
+    - "+.wowsgame.cn"
+    - "+.wargaming.net"
+    - "*.qq.com"
+    - "music.163.com"
+    - "*.music.163.com"
+    - "*.126.net"
+    - "musicapi.taihe.com"
+    - "music.taihe.com"
+    - "songsearch.kugou.com"
+    - "trackercdn.kugou.com"
+    - "*.kuwo.cn"
+    - "api.joox.com"
+    - "y.qq.com"
+    - "*.y.qq.com"
+    - "streamoc.music.tc.qq.com"
+    - "mobileoc.music.tc.qq.com"
+    - "isure.stream.qqmusic.qq.com"
+    - "dl.stream.qqmusic.qq.com"
+    - "aqqmusic.tc.qq.com"
+    - "amobile.music.tc.qq.com"
+    - "*.xiami.com"
+    - "*.music.migu.cn"
+    - "music.migu.cn"
+    - "+.pool.ntp.org"
+    - "*.time.edu.cn"
+    - "*.ntp.org.cn"
+    - "+.360.cn"
+    - "+.360safe.com"
+    - "+.360.com"
+    - "+.qihoo.com"
+    - "+.360buy.com"
+    - "+.jd.com"
+    - "+.taobao.com"
+    - "+.tmall.com"
+
   use-hosts: true
   use-system-hosts: true
   
   # ⚠️ [优化] 增加并发查询数
-  prefer-h3: true 
+  prefer-h3: false
   
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
+    - 114.114.114.114 # 增加这个作为备用兜底
+    - 8.8.8.8 # 增加一个国外 DNS 防止国内 DNS 挂掉时无法解析 DoH 域名
   
   nameserver:
     # ⚠️ [优化] 国内 DNS 走 H3/DoH，防止污染，提升解析成功率
@@ -89,31 +151,48 @@ dns:
     - https://doh.pub/dns-query
   
   proxy-server-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
   
   nameserver-policy:
-    # ⚠️ [优化] 明确指定 AI 和国外站点走 Google/Cloudflare DNS
-    "geosite:geolocation-!cn":
+    # Gemini/Google AI：强制使用非本地解析，降低污染/误分流
+    "rule-set:Gemini":
       - https://dns.google/dns-query
       - https://cloudflare-dns.com/dns-query
-    "rule-set:OpenAI,Claude,Gemini,Copilot":
+    "domain:aistudio.google.com":
       - https://dns.google/dns-query
       - https://cloudflare-dns.com/dns-query
+    "domain-suffix:generativelanguage.googleapis.com":
+      - https://dns.google/dns-query
+      - https://cloudflare-dns.com/dns-query
+    "domain:robinfrontend-pa.googleapis.com":
+      - https://dns.google/dns-query
+      - https://cloudflare-dns.com/dns-query  
+
+#  nameserver-policy:
+#    # ⚠️ [优化] 明确指定 AI 和国外站点走 Google/Cloudflare DNS
+#    "geosite:geolocation-!cn":
+#      - https://dns.google/dns-query
+#      - https://cloudflare-dns.com/dns-query
+#    "rule-set:OpenAI,Claude,Gemini,Copilot":
+#      - https://dns.google/dns-query
+#      - https://cloudflare-dns.com/dns-query
 
 # --- 代理提供商 ---
 proxy-providers:
   我的节点:
     type: http
     # ⚠️⚠️⚠️ 请在这里填入你的机场订阅链接 ⚠️⚠️⚠️
-    url: https://api.wd-red.com/sub?target=clash&emoji=true&udp=true&scv=true&new_name=true&filename=WestData&url=https%3A%2F%2Fwd-red.com%2Fsubscribe%2Fnxyvnm-p1aasfef-N9zBNh3Id924
+    url: 
     interval: 3600
     path: ./providers/my-nodes.yaml
     health-check:
       enable: true
-      url: http://www.gstatic.com/generate_204
-      interval: 300
+      url: https://cp.cloudflare.com/generate_204
+      interval: 150
       lazy: true # 推荐开启 lazy，只有策略组使用该 provider 时才检测，节省资源
+    override:
+      udp: true
 
 # --- 规则集 (保持不变) ---
 rule-providers:
@@ -189,6 +268,16 @@ proxy-groups:
       - 🇺🇸 US Auto
       - 🚀 手动切换
 
+  - name: 🔍 Google
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google.png
+    proxies:
+      - 🇸🇬 SG Auto
+      - 🇭🇰 HK Auto
+      - 🇯🇵 JP Auto
+      - 🇺🇸 US Auto
+      - 🚀 手动切换
+
   - name: 🐙 GitHub
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
@@ -204,90 +293,107 @@ proxy-groups:
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300 # 间隔适当调大，减少资源消耗
     tolerance: 150 
     lazy: true # 改为 true，不需要时刻都在后台测速，只有点开时才测
-    filter: (?i)(香港|港|HK|Hong\s*Kong)
+    filter: (?i)(香港|港|HKG|Hong\s*Kong)
 
   - name: 🇨🇳 TW Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/CN.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 150
     lazy: true
-    filter: (?i)(台湾|台|TW|Taiwan|Taipei)
+    filter: (?i)(台湾|台|TWN|Taiwan|Taipei)
 
   - name: 🇯🇵 JP Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/JP.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 150
     lazy: true
-    filter: (?i)(日本|日|JP|Japan|Tokyo|Osaka)
+    filter: (?i)(日本|日|JPN|Japan|Tokyo|Osaka)
 
   - name: 🇸🇬 SG Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/SG.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 150
     lazy: true
-    filter: (?i)(新加坡|狮城|獅城|SG|Singapore)
+    filter: (?i)(新加坡|狮城|獅城|SGP|Singapore)
 
   - name: 🇺🇸 US Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/US.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
-    tolerance: 150
-    lazy: true
-    filter: (?i)(美国|美|US|USA|United\s*States|America)
+    tolerance: 50
+    lazy: false
+    filter: "(?i)(美国|USA|United\\s*States|America|\\bUS\\b)"
 
   - name: 🇩🇪 DE Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/DE.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 150
     lazy: true
-    filter: (?i)(德国|德|DE|Germany)
+    filter: (?i)(德国|德|DEU|Germany)
 
   - name: 🇬🇧 UK Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/UK.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 150
     lazy: true
-    filter: (?i)(英国|英|UK|United\s*Kingdom)
+    filter: (?i)(英国|英|GBR|United\s*Kingdom)
 
   - name: 🇳🇱 NL Auto
     type: url-test
-    icon: https://fastly.jsdelivr.net/gh/Orz-3/mini@master/Color/NL.png
+    icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Netherlands.png
     use: [我的节点]
-    url: http://www.gstatic.com/generate_204
+    url: https://cp.cloudflare.com/generate_204
     interval: 300
     tolerance: 150
     lazy: true
-    filter: (?i)(荷兰|NL|Netherlands)
+    filter: (?i)(荷兰|NLD|Netherlands)
 
 # --- 规则 ---
 rules:
-  # 1. 拦截 Google UDP (QUIC)
-  - AND,((NETWORK,UDP),(OR,((DOMAIN-SUFFIX,google.com),(DOMAIN-SUFFIX,youtube.com)))),REJECT
+  # --- 移植优化：系统服务直连 ---
+  # 解决 Windows/Android 显示无网络连接的问题
+  - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
+  - DOMAIN-SUFFIX,msftncsi.com,DIRECT
+  - DOMAIN-SUFFIX,ipv6.microsoft.com,DIRECT
+  # 解决时间同步问题
+  - DOMAIN-SUFFIX,pool.ntp.org,DIRECT
+  - DOMAIN-SUFFIX,ntp.org.cn,DIRECT
+  - DOMAIN-SUFFIX,time.apple.com,DIRECT
+  - DOMAIN-SUFFIX,time.edu.cn,DIRECT
+  
+  # 2. 优先放行 GitHub 和 Reddit (防止被 Microsoft 规则误伤)
+  - DOMAIN-SUFFIX,github.com,🐙 GitHub
+  - DOMAIN-SUFFIX,githubusercontent.com,🐙 GitHub
+  - GEOSITE,github,🐙 GitHub
+  - GEOSITE,reddit,🌐 Proxy
 
-  # 2. AI 规则
+  # 3. AI 服务
   - DOMAIN-SUFFIX,notebooklm.google.com,🌀 AI
   - DOMAIN-KEYWORD,notebooklm,🌀 AI
+  - DOMAIN,aistudio.google.com,🌀 AI
+  - DOMAIN-SUFFIX,generativelanguage.googleapis.com,🌀 AI
+  - DOMAIN,robinfrontend-pa.googleapis.com,🌀 AI
   - RULE-SET,OpenAI,🌀 AI
   - RULE-SET,Claude,🌀 AI
   - RULE-SET,Gemini,🌀 AI
@@ -295,29 +401,40 @@ rules:
   - DOMAIN-SUFFIX,grok.com,🌀 AI
   - DOMAIN-SUFFIX,x.ai,🌀 AI
 
-  # 3. Adobe 阻断
-  - RULE-SET,Adobe,REJECT
+  # 1. 阻断 QUIC (解决 Google/YouTube 转圈)
+  - AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,youtube)),REJECT
+#  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
+#  - AND,((NETWORK,UDP),(DST-PORT,443),(GEOIP,CN)),REJECT
+  
+  # 4. 微软直连 (保持现状)
+  - DOMAIN-SUFFIX,microsoft.com,DIRECT
+  - DOMAIN-SUFFIX,live.com,DIRECT
+  - DOMAIN-SUFFIX,office.com,DIRECT
+  - DOMAIN-SUFFIX,office365.com,DIRECT
+  - DOMAIN-SUFFIX,bing.com,DIRECT
+  - GEOSITE,microsoft@cn,DIRECT
+  - GEOSITE,apple@cn,DIRECT
 
-  # 4. 局域网直连
-  - GEOSITE,private,DIRECT
-  - GEOSITE,category-ads-all,REJECT
-
-  # 5. 常用服务
+  # 5. 其他常规
   - GEOSITE,youtube,📺 YouTube
-  - GEOSITE,github,🐙 GitHub
+  - GEOSITE,google,🔍 Google
   - GEOSITE,steam,🌐 Proxy
   - GEOSITE,telegram,🌐 Proxy
   - GEOSITE,netflix,🌐 Proxy
-
-  # 国内服务直连
-  - GEOSITE,microsoft@cn,DIRECT
-  - GEOSITE,apple@cn,DIRECT
+  - RULE-SET,Adobe,REJECT
+  - GEOSITE,private,DIRECT
+  - GEOSITE,category-ads-all,REJECT
   - GEOSITE,cn,DIRECT
-  
-  # 防止回环
-  - DOMAIN-SUFFIX,my.clashverge.dev,DIRECT
-  - DOMAIN-SUFFIX,clashverge.org,DIRECT
-  
-  # 8. 兜底
+  # 局域网和保留地址防止误走代理
+  - IP-CIDR,0.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
+  - IP-CIDR,169.254.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+  - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,224.0.0.0/4,DIRECT,no-resolve
+  - IP-CIDR6,::1/128,DIRECT,no-resolve
+  - IP-CIDR6,fc00::/7,DIRECT,no-resolve
+  - IP-CIDR6,fe80::/10,DIRECT,no-resolve
   - GEOIP,CN,DIRECT
   - MATCH,🌐 Proxy
