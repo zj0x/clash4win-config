@@ -1,19 +1,13 @@
 port: 7890
 socks-port: 7891
 mixed-port: 7892
-# redir-port: 7893
-# tproxy-port: 7894
 ipv6: false
 allow-lan: true
 mode: rule
 log-level: info
 unified-delay: true
 external-controller: 0.0.0.0:9090
-
-# --- 核心优化 (已修改) ---
-# TCP 并发握手，显著减少建立连接的等待时间
 tcp-concurrent: true
-# ⚠️ [优化] 将 600 改为 30，防止运营商 NAT 掐断空闲连接导致卡顿
 keep-alive-interval: 30
 tcp-no-delay: true
 find-process-mode: strict
@@ -137,15 +131,12 @@ dns:
 
   use-hosts: true
   use-system-hosts: true
-  
-  # ⚠️ [优化] 增加并发查询数
   prefer-h3: false
-  
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
-    - 114.114.114.114 # 增加这个作为备用兜底
-    - 8.8.8.8 # 增加一个国外 DNS 防止国内 DNS 挂掉时无法解析 DoH 域名
+    - 114.114.114.114 
+    - 8.8.8.8 
   
   nameserver:
     # ⚠️ [优化] 国内 DNS 走 H3/DoH，防止污染，提升解析成功率
@@ -171,15 +162,6 @@ dns:
       - https://dns.google/dns-query
       - https://cloudflare-dns.com/dns-query  
 
-#  nameserver-policy:
-#    # ⚠️ [优化] 明确指定 AI 和国外站点走 Google/Cloudflare DNS
-#    "geosite:geolocation-!cn":
-#      - https://dns.google/dns-query
-#      - https://cloudflare-dns.com/dns-query
-#    "rule-set:OpenAI,Claude,Gemini,Copilot":
-#      - https://dns.google/dns-query
-#      - https://cloudflare-dns.com/dns-query
-
 # --- 代理提供商 ---
 proxy-providers:
   我的节点:
@@ -192,11 +174,11 @@ proxy-providers:
       enable: true
       url: https://cp.cloudflare.com/generate_204
       interval: 150
-      lazy: true # 推荐开启 lazy，只有策略组使用该 provider 时才检测，节省资源
+      lazy: true 
     override:
       udp: true
 
-# --- 规则集 (保持不变) ---
+# --- 规则集 ---
 rule-providers:
   Adobe:
     type: http
@@ -300,7 +282,7 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300 # 间隔适当调大，减少资源消耗
+    interval: 300 
     tolerance: 150 
     lazy: true 
     filter: (?i)(香港|港|HKG|Hong\s*Kong)
