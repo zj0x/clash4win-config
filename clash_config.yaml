@@ -385,6 +385,12 @@ rules:
   - RULE-SET,Copilot,AI
   - DOMAIN-SUFFIX,grok.com,AI
   - DOMAIN-SUFFIX,x.ai,AI
+  # --- ✅ 新增 Copilot / Bing AI 专用规则 ---
+  - DOMAIN-SUFFIX,copilot.microsoft.com,🌀 AI
+  - DOMAIN-SUFFIX,edgeservices.bing.com,🌀 AI  
+  - DOMAIN-SUFFIX,sydney.bing.com,🌀 AI     
+  - DOMAIN-SUFFIX,bing.com,🌀 AI               
+  - DOMAIN-SUFFIX,www.bing.com,🌀 AI
 
   # 1. 阻断 QUIC (解决 Google/YouTube 转圈)
   - AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,youtube)),REJECT
