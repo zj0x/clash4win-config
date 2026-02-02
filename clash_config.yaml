@@ -73,7 +73,12 @@ dns:
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
 
+  # ⚠️ [新增优化] 开启 H3 并发，秒级响应
   prefer-h3: true
+
+  # ⚠️ [新增优化] 开启乐观缓存 (参考截图建议)
+  # 即使 DNS 过期也先返回旧结果让网页秒开，后台默默更新
+  optimistic-cache: true
   
   fake-ip-filter:
     - "+.lan"
