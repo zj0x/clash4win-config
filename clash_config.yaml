@@ -56,7 +56,7 @@ sniffer:
 # --- Tun 模式 ---
 tun:
   enable: true
-  stack: gvisor # ⚠️ [优化] system 改为 mixed，兼容性更好，减少 Windows 下的玄学断流
+  stack: mixed 
   auto-route: true
   auto-detect-interface: true
   dns-hijack:
@@ -132,11 +132,10 @@ dns:
   use-hosts: true
   use-system-hosts: true
   prefer-h3: false
+  
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
-    - 114.114.114.114 
-    - 8.8.8.8 
   
   nameserver:
     # ⚠️ [优化] 国内 DNS 走 H3/DoH，防止污染，提升解析成功率
@@ -146,7 +145,25 @@ dns:
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-  
+
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://dns.google/dns-query
+    - https://freedns.controld.com/p0
+
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+    domain:
+      - "+.google.com"
+      - "+.facebook.com"
+      - "+.youtube.com"
+      - "+.twitter.com"
+      - "+.github.com"
+      - "+.telegram.org"
+     
   nameserver-policy:
     # Gemini/Google AI：强制使用非本地解析，降低污染/误分流
     "rule-set:Gemini":
