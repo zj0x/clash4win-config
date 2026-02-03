@@ -193,6 +193,9 @@ dns:
     "geosite:geolocation-!cn":
       - https://dns.google/dns-query
       - https://1.1.1.1/dns-query
+    "+.": # 默认兜底（如果上面都没匹配到）
+      - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
     
   # --- 代理提供商 ---
 proxy-providers:
