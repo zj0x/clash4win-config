@@ -312,8 +312,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300 
-    tolerance: 150 
+    interval: 1800 
+    tolerance: 100 
     lazy: true 
     filter: (?i)(香港|港|HKG|Hong\s*Kong)
 
@@ -322,8 +322,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/CN.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 150
+    interval: 1800
+    tolerance: 100
     lazy: true
     filter: (?i)(台湾|台|TWN|Taiwan|Taipei)
 
@@ -332,8 +332,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/JP.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 150
+    interval: 1800
+    tolerance: 100
     lazy: true
     filter: (?i)(日本|日|JPN|Japan|Tokyo|Osaka)
 
@@ -342,8 +342,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/SG.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 150
+    interval: 1800
+    tolerance: 100
     lazy: true
     filter: (?i)(新加坡|狮城|獅城|SGP|Singapore)
 
@@ -352,8 +352,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/US.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 50
+    interval: 1800
+    tolerance: 100
     lazy: false
     filter: "(?i)(美国|USA|United\\s*States|America|\\bUS\\b)"
 
@@ -362,8 +362,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/DE.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 150
+    interval: 1800
+    tolerance: 100
     lazy: true
     filter: (?i)(德国|德|DEU|Germany)
 
@@ -372,8 +372,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/UK.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 150
+    interval: 1800
+    tolerance: 100
     lazy: true
     filter: (?i)(英国|英|GBR|United\s*Kingdom)
 
@@ -382,8 +382,8 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Semporia/Hand-Painted-icon/master/Rounded_Rectangle/Netherlands.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 300
-    tolerance: 150
+    interval: 1800
+    tolerance: 100
     lazy: true
     filter: (?i)(荷兰|NLD|Netherlands)
 
