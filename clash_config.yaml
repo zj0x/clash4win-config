@@ -80,6 +80,8 @@ dns:
   # ⚠️ [新增优化] 开启乐观缓存 (参考截图建议)
   # 即使 DNS 过期也先返回旧结果让网页秒开，后台默默更新
   optimistic-cache: true
+
+  cache-algorithm: arc 
   
   fake-ip-filter:
     - "+.lan"
