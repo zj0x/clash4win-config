@@ -12,7 +12,7 @@ tcp-concurrent: true
 keep-alive-interval: 30
 tcp-no-delay: true
 find-process-mode: strict
-global-client-fingerprint: chrome
+#global-client-fingerprint: chrome
 
 # --- Meta Geo 数据 ---
 geodata-mode: true
