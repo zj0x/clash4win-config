@@ -36,7 +36,7 @@ sniffer:
   override-destination: true
   sniff:
     HTTP:
-      ports: [80, 8080] 
+      ports: [80, 8080]
       override-destination: true
     TLS:
       ports: [443, 8443]
@@ -56,7 +56,7 @@ sniffer:
 # --- Tun 模式 ---
 tun:
   enable: true
-  stack: mixed 
+  stack: mixed
   auto-route: true
   auto-detect-interface: true
   dns-hijack:
@@ -74,8 +74,8 @@ dns:
   fake-ip-range: 198.18.0.1/16
   prefer-h3: true
   optimistic-cache: true
-  cache-algorithm: arc 
-  
+  cache-algorithm: arc
+
   fake-ip-filter:
     - "+.lan"
     - "+.local"
@@ -131,21 +131,21 @@ dns:
 
   use-hosts: true
   use-system-hosts: true
-    
+
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
-  
+
   nameserver:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-  
+
   proxy-server-nameserver:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-  
+
   # 优化：删除了与 policy 冲突的 fallback 模块
-     
+
   nameserver-policy:
     "rule-set:Gemini":
       - https://dns.google/dns-query
@@ -158,17 +158,17 @@ dns:
       - https://cloudflare-dns.com/dns-query
     "domain:robinfrontend-pa.googleapis.com":
       - https://dns.google/dns-query
-      - https://cloudflare-dns.com/dns-query  
+      - https://cloudflare-dns.com/dns-query
     "geosite:cn,private":
       - https://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
     "geosite:geolocation-!cn":
       - https://dns.google/dns-query
       - https://1.1.1.1/dns-query
-    "+.": 
+    "+.":
       - https://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
-    
+
 # --- 代理提供商 ---
 proxy-providers:
   我的节点:
@@ -181,7 +181,7 @@ proxy-providers:
       enable: true
       url: https://cp.cloudflare.com/generate_204
       interval: 150
-      lazy: true 
+      lazy: true
     override:
       udp: true
 
@@ -288,9 +288,9 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
     use: [我的节点]
     url: https://cp.cloudflare.com/generate_204
-    interval: 1800 
-    tolerance: 100 
-    lazy: true 
+    interval: 1800
+    tolerance: 100
+    lazy: true
     filter: (?i)(香港|港|HKG|Hong\s*Kong)
 
   - name: TW Auto
@@ -372,7 +372,7 @@ rules:
   - DOMAIN-SUFFIX,ntp.org.cn,DIRECT
   - DOMAIN-SUFFIX,time.apple.com,DIRECT
   - DOMAIN-SUFFIX,time.edu.cn,DIRECT
-  
+
   # 放行 GitHub/Reddit
   - GEOSITE,github,GitHub
   - GEOSITE,linkedin,Proxy
@@ -390,15 +390,15 @@ rules:
   - RULE-SET,Copilot,AI
   - DOMAIN-SUFFIX,grok.com,AI
   - DOMAIN-SUFFIX,x.ai,AI
-  
+
   # Copilot / Bing
   - DOMAIN-SUFFIX,copilot.microsoft.com,AI
-  - DOMAIN-SUFFIX,edgeservices.bing.com,AI  
-  - DOMAIN-SUFFIX,bing.com,AI               
+  - DOMAIN-SUFFIX,edgeservices.bing.com,AI
+  - DOMAIN-SUFFIX,bing.com,AI
 
   # 阻断 QUIC (仅限 Meta 内核)
   - AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,youtube)),REJECT
-  
+
   # 微软直连
   - GEOSITE,microsoft,DIRECT
 
@@ -412,7 +412,7 @@ rules:
   - GEOSITE,private,DIRECT
   - GEOSITE,category-ads-all,REJECT
   - GEOSITE,cn,DIRECT
-  
+
   # 局域网
   - IP-CIDR,0.0.0.0/8,DIRECT,no-resolve
   - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
