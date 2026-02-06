@@ -20,7 +20,6 @@ geodata-loader: standard
 geo-auto-update: true
 geo-update-interval: 24
 geox-url:
-  mmdb: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geoip.dat
   geoip: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geoip.dat
   geosite: https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geosite.dat
   asn: https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb
@@ -33,11 +32,11 @@ profile:
 sniffer:
   enable: true
   parse-pure-ip: true
-  force-dns-mapping: true # ⚠️ [优化] 改为 true，不仅嗅探，还将嗅探到的域名反向映射回 DNS 缓存，提高准确率
+  force-dns-mapping: true
   override-destination: true
   sniff:
     HTTP:
-      ports: [80, 8080-8880]
+      ports: [80, 8080] # 修复：移除了不支持的范围格式 8080-8880
       override-destination: true
     TLS:
       ports: [443, 8443]
@@ -63,7 +62,7 @@ tun:
   dns-hijack:
     - any:53
     - tcp://any:53
-  mtu: 1400 # ⚠️ [优化] 如果是千兆局域网，可尝试 9000 (Jumbo Frame) 或保持 1400/1500。保守设置保持 1400 即可。
+  mtu: 1400
 
 # --- DNS 设置 (速度核心) ---
 dns:
@@ -73,14 +72,8 @@ dns:
   respect-rules: true
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-
-  # ⚠️ [新增优化] 开启 H3 并发，秒级响应
   prefer-h3: true
-
-  # ⚠️ [新增优化] 开启乐观缓存 (参考截图建议)
-  # 即使 DNS 过期也先返回旧结果让网页秒开，后台默默更新
   optimistic-cache: true
-
   cache-algorithm: arc 
   
   fake-ip-filter:
@@ -92,9 +85,6 @@ dns:
     - "+.msftncsi.com"
     - "*.msftconnecttest.com"
     - "*.msftncsi.com"
-    - "msftconnecttest.com"
-    - "msftncsi.com"
-    - "*.stun.*.*"
     - "stun.*.*"
     - "stun.*.*.*"
     - "+.srv.nintendo.net"
@@ -147,7 +137,6 @@ dns:
     - 119.29.29.29
   
   nameserver:
-    # ⚠️ [优化] 国内 DNS 走 H3/DoH，防止污染，提升解析成功率
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
   
@@ -155,26 +144,9 @@ dns:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
   
-  fallback:
-    - https://1.1.1.1/dns-query
-    - https://dns.google/dns-query
-    - https://freedns.controld.com/p0
-
-  fallback-filter:
-    geoip: true
-    geoip-code: CN
-    ipcidr:
-      - 240.0.0.0/4
-    domain:
-      - "+.google.com"
-      - "+.facebook.com"
-      - "+.youtube.com"
-      - "+.twitter.com"
-      - "+.github.com"
-      - "+.telegram.org"
+  # 优化：删除了与 policy 冲突的 fallback 模块
      
   nameserver-policy:
-    # Gemini/Google AI：强制使用非本地解析，降低污染/误分流
     "rule-set:Gemini":
       - https://dns.google/dns-query
       - https://cloudflare-dns.com/dns-query
@@ -193,16 +165,16 @@ dns:
     "geosite:geolocation-!cn":
       - https://dns.google/dns-query
       - https://1.1.1.1/dns-query
-    "+.": # 默认兜底（如果上面都没匹配到）
+    "+.": 
       - https://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
     
-  # --- 代理提供商 ---
+# --- 代理提供商 ---
 proxy-providers:
   我的节点:
     type: http
-    # ⚠️⚠️⚠️ 请在这里填入你的机场订阅链接 ⚠️⚠️⚠️
-    url: 
+    # 修复：填入了占位符防止报错，请替换为真实链接
+    url: "https://example.com/replace-me"
     interval: 3600
     path: ./providers/my-nodes.yaml
     health-check:
@@ -311,7 +283,6 @@ proxy-groups:
       - SG Auto
       - 手动切换
 
-  # 地区自动选择组 
   - name: HK Auto
     type: url-test
     icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png
@@ -394,22 +365,20 @@ proxy-groups:
 
 # --- 规则 ---
 rules:
-  # --- 移植优化：系统服务直连 ---
-  # 解决 Windows/Android 显示无网络连接的问题
-  - GEOSITE,win-update,DIRECT  # Windows 更新
+  # 移植优化
+  - GEOSITE,win-update,DIRECT
   - DOMAIN-SUFFIX,ipv6.microsoft.com,DIRECT
-  # 解决时间同步问题
   - DOMAIN-SUFFIX,pool.ntp.org,DIRECT
   - DOMAIN-SUFFIX,ntp.org.cn,DIRECT
   - DOMAIN-SUFFIX,time.apple.com,DIRECT
   - DOMAIN-SUFFIX,time.edu.cn,DIRECT
   
-  # 2. 优先放行 GitHub 和 Reddit (防止被 Microsoft 规则误伤)
+  # 放行 GitHub/Reddit
   - GEOSITE,github,GitHub
   - GEOSITE,linkedin,Proxy
   - GEOSITE,reddit,Proxy
 
-  # 3. AI 服务
+  # AI 服务
   - DOMAIN-SUFFIX,notebooklm.google.com,AI
   - DOMAIN-KEYWORD,notebooklm,AI
   - DOMAIN,aistudio.google.com,AI
@@ -422,18 +391,18 @@ rules:
   - DOMAIN-SUFFIX,grok.com,AI
   - DOMAIN-SUFFIX,x.ai,AI
   
-  # --- ✅ 新增 Copilot / Bing AI 专用规则 ---
+  # Copilot / Bing
   - DOMAIN-SUFFIX,copilot.microsoft.com,AI
   - DOMAIN-SUFFIX,edgeservices.bing.com,AI  
   - DOMAIN-SUFFIX,bing.com,AI               
 
-  # 1. 阻断 QUIC (解决 Google/YouTube 转圈)
+  # 阻断 QUIC (仅限 Meta 内核)
   - AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,youtube)),REJECT
   
-  # 4. 微软直连
+  # 微软直连
   - GEOSITE,microsoft,DIRECT
 
-  # 5. 其他常规
+  # 其他
   - GEOSITE,youtube,YouTube
   - GEOSITE,google,Google
   - GEOSITE,steam,Proxy
@@ -443,7 +412,8 @@ rules:
   - GEOSITE,private,DIRECT
   - GEOSITE,category-ads-all,REJECT
   - GEOSITE,cn,DIRECT
-  # 局域网和保留地址防止误走代理
+  
+  # 局域网
   - IP-CIDR,0.0.0.0/8,DIRECT,no-resolve
   - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
   - IP-CIDR,127.0.0.0/8,DIRECT,no-resolve
