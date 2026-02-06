@@ -234,6 +234,8 @@ proxy-groups:
       - DE Auto
       - NL Auto
       - DIRECT
+    use:
+      - 我的节点
 
   - name: AI
     type: select
@@ -243,6 +245,10 @@ proxy-groups:
       - US Auto
       - SG Auto
       - JP Auto
+      - UK Auto
+      - DE Auto
+    use:
+      - 我的节点
 
   - name: 手动切换
     type: select
@@ -263,6 +269,8 @@ proxy-groups:
       - DE Auto
       - NL Auto
       - 手动切换
+    use:
+      - 我的节点
 
   - name: Google
     type: select
@@ -272,7 +280,11 @@ proxy-groups:
       - HK Auto
       - JP Auto
       - US Auto
+      - UK Auto
+      - DE Auto
       - 手动切换
+    use:
+      - 我的节点
 
   - name: GitHub
     type: select
@@ -281,7 +293,11 @@ proxy-groups:
       - US Auto
       - JP Auto
       - SG Auto
+      - UK Auto
+      - DE Auto
       - 手动切换
+    use:
+      - 我的节点
 
   - name: HK Auto
     type: url-test
