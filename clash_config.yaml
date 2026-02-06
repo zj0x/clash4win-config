@@ -6,13 +6,13 @@ allow-lan: false
 mode: rule
 log-level: info
 unified-delay: true
-#external-controller: 127.0.0.1:9090
-#secret: "oekx*Z!loy"
+external-controller: 127.0.0.1:9090
+secret: "oekx*Z!loy"
 tcp-concurrent: true
 keep-alive-interval: 30
 tcp-no-delay: true
 find-process-mode: strict
-#global-client-fingerprint: chrome
+global-client-fingerprint: chrome
 
 # --- Meta Geo 数据 ---
 geodata-mode: true
