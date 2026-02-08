@@ -241,45 +241,45 @@ proxy-groups:
   # ============================================
   # 地区分组：手动组 (Select)
   # ============================================
-  - name: "🇭🇰 香港手动"
+  - name: "香港Select"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
       - MyAirport
     filter: "(?i)(HK|Hong Kong|香港|HKG)"
 
-  - name: "🇹🇼 台湾手动"
+  - name: "台湾Select"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
     use:
       - MyAirport
     filter: "(?i)(TW|Taiwan|台湾|TWN)"
 
-  - name: "🇯🇵 日本手动"
+  - name: "日本Select"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
       - MyAirport
     filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
 
-  - name: "🇸🇬 新加坡手动"
+  - name: "新加坡Select"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
       - MyAirport
     filter: "(?i)(SG|Singapore|新加坡|SGP)"
 
-  - name: "🇺🇸 美国手动"
+  - name: "美国Select"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
       - MyAirport
-    filter: "(?i)(US|United States|美国|USA)"
+    filter: "(?i)(United States|美国|USA)"
 
   # ============================================
   # 地区分组：自动测速组 (Url-Test)
   # ============================================
-  - name: "🇭🇰 香港自动"
+  - name: "香港Auto"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
@@ -289,7 +289,7 @@ proxy-groups:
     interval: 300
     tolerance: 50
 
-  - name: "🇯🇵 日本自动"
+  - name: "日本Auto"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
@@ -299,7 +299,7 @@ proxy-groups:
     interval: 300
     tolerance: 50
 
-  - name: "🇸🇬 新加坡自动"
+  - name: "新加坡Auto"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
@@ -309,17 +309,17 @@ proxy-groups:
     interval: 300
     tolerance: 50
 
-  - name: "🇺🇸 美国自动"
+  - name: "美国Auto"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
       - MyAirport
-    filter: "(?i)(US|United States|美国|USA)"
+    filter: "(?i)(United States|美国|USA)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
     tolerance: 50
     
-  - name: "🇪🇺 欧洲自动"
+  - name: "欧洲Auto"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/European_Union.png
     use:
