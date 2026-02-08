@@ -38,6 +38,15 @@ geodata-loader: standard
 geo-auto-update: true
 geo-update-interval: 24
 
+# 开启 TUN 模式配合 stack: system 可以获得接近原生网络的响应速度
+tun:
+  enable: true
+  stack: system # 核心优化点：使用系统协议栈，性能优于 gvisor
+  dns-hijack:
+    - any
+  auto-route: true
+  auto-detect-interface: true
+
 # ---------------------------------------------------
 # 3. 流量嗅探 (Sniffer) - 解决 IP 直连应用的规则匹配问题
 # ---------------------------------------------------
@@ -74,6 +83,13 @@ dns:
   use-hosts: true             # 允许读取系统 hosts 文件
   respect-rules: true         # 遵循规则中的 DNS 设置 (配合 search domain)
   
+  # 🔴 [优化点 1] 基础 DNS (Default Nameserver)
+  # 必须配置纯 IP 的 DNS，用于解析后续 DoH 域名的 IP
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 1.1.1.1 # 增加一个国外备用
+  
   # 🔴 关键优化：指定代理节点本身域名的解析服务器
   # 防止代理节点域名被污染
   proxy-server-nameserver:
@@ -82,14 +98,10 @@ dns:
   
   # 默认 DNS (用于非策略组域名的解析兜底)
   nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
+    - https://dns.google/dns-query
+    - https://1.1.1.1/dns-query
     
-  # 备用 DNS (当 DoH 失败时回退到 UDP，保证断网时也能恢复)
-  fallback:
-    - 223.5.5.5
-    - 119.29.29.29
-  
+
   # 🔴 策略分流 (Split DNS) - 这里的顺序和写法至关重要
   nameserver-policy:
     # 1. 所有的 Google 和 AI 服务，强制使用国外 DoH (防污染，且解析出离代理最近的 IP)
