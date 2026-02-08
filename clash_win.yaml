@@ -1,0 +1,329 @@
+# Clash Verge Rev (Mihomo Kernel) Ultimate Config
+# 适配 Windows 平台 & 中国大陆网络环境
+# 更新时间：2024-05 (集成 HTTP/3 & ARC 缓存算法)
+
+# ---------------------------------------------------
+# 1. 基础监听与端口
+# ---------------------------------------------------
+port: 7890
+socks-port: 7891
+mixed-port: 7890
+allow-lan: true
+mode: rule
+log-level: info
+ipv6: false
+external-controller: 127.0.0.1:9090
+
+# ---------------------------------------------------
+# 2. Mihomo 核心性能参数
+# ---------------------------------------------------
+# 开启 HTTP/3 (QUIC) 支持，大幅降低握手延迟，抗丢包能力强
+prefer-h3: true 
+
+# 统一延迟计算，防止节点抖动
+unified-delay: true
+
+# TCP 并发连接，提高握手成功率
+tcp-concurrent: true
+
+# 保持连接活跃间隔 (秒)，配合 HTTP/3 防止连接中断
+keep-alive-interval: 15
+
+# 进程匹配模式，Windows下 strict 模式对规则匹配更精准
+find-process-mode: strict
+
+# 浏览器指纹模拟，防止 TLS 指纹被墙识别
+global-client-fingerprint: chrome
+
+# GeoData 模式
+geodata-mode: true
+geodata-loader: standard
+geo-auto-update: true
+geo-update-interval: 24
+
+# ---------------------------------------------------
+# 3. 流量嗅探 (Sniffer) - 解决 IP 直连应用的规则匹配问题
+# ---------------------------------------------------
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    TLS:
+      ports: [443, 8443]
+    HTTP:
+      ports: [80, 8080-8880]
+    QUIC:
+      ports: [443, 8443]
+  # 强制不对以下域名进行嗅探（防止米哈游等游戏断流）
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+# ---------------------------------------------------
+# 4. DNS 配置 (速度优化的核心)
+# ---------------------------------------------------
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  
+  # 模式选择
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  
+  # 缓存与性能 (Mihomo 专享)
+  cache-algorithm: arc
+  use-hosts: true             # 允许读取系统 hosts 文件
+  respect-rules: true         # 遵循规则中的 DNS 设置 (配合 search domain)
+  
+  # 🔴 关键优化：指定代理节点本身域名的解析服务器
+  # 防止代理节点域名被污染，同时避免“先有鸡还是先有蛋”的解析死循环
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  
+  # 默认 DNS (用于非策略组域名的解析兜底)
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+    
+  # 备用 DNS (当 DoH 失败时回退到 UDP，保证断网时也能恢复)
+  fallback:
+    - 223.5.5.5
+    - 119.29.29.29
+  
+  # 🔴 策略分流 (Split DNS) - 这里的顺序和写法至关重要
+  nameserver-policy:
+    # 1. 所有的 Google 和 AI 服务，强制使用国外 DoH (防污染，且解析出离代理最近的 IP)
+    "geosite:google,youtube,telegram,openai":
+      - "https://1.1.1.1/dns-query#h3=true"
+      - "https://8.8.8.8/dns-query#h3=true"
+      
+    # 2. 国外常用站点，走国外 DNS
+    "geosite:geolocation-!cn":
+      - "https://1.1.1.1/dns-query#h3=true"
+      - "https://8.8.8.8/dns-query#h3=true"
+
+    # 3. 国内域名，强制走国内 DNS (腾讯+阿里)
+    "geosite:cn,private,apple,steam@cn":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+
+  # 🔴 Fake-IP 过滤 (Windows 稳定性救星)
+  # 以下域名不返回假 IP，而是返回真实 IP。
+  # 解决 Windows 网络探测显示“无网络”、STUN 穿透失败、游戏联机失败等问题
+  fake-ip-filter:
+    - "*"  # 如果你发现某些局域网设备无法连接，可以保留这个通配符，但通常不建议
+    - "+.lan"
+    - "+.local"
+    - "+.market.xboxcn.com"
+    - "+.msftconnecttest.com" # Windows 网络连接探测
+    - "+.msftncsi.com"        # Windows 网络连接探测
+    - "msftconnecttest.com"
+    - "msftncsi.com"
+    - "+.battlenet.com.cn"    # 暴雪战网国服
+    - "+.stun.*.*"            # STUN 穿透
+    - "+.stun.*"
+    - "stun.*.*"
+    - "stun.*"
+    - "+.ntp.org.cn"          # NTP 时间同步
+    - "+.pool.ntp.org"
+
+# ---------------------------------------------------
+# 5. 代理提供者 (需填写您的订阅)
+# ---------------------------------------------------
+proxy-providers:
+  MyAirport:
+    type: http
+    # 🔴🔴🔴 请在下方引号内填入你的机场订阅链接 🔴🔴🔴
+    url: "https://example.com/api/v1/client/subscribe?token=YOUR_TOKEN"
+    interval: 3600
+    path: ./proxies/airport.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://www.gstatic.com/generate_204
+    # 排除倍率过高或无效节点
+    filter: "(?i)(HK|TW|JP|SG|US|DE|GB|NL|香港|台湾|日本|新加坡|美国|德国|英国|荷兰)"
+
+# ---------------------------------------------------
+# 6. 策略组 (保持原有逻辑，增加容错)
+# ---------------------------------------------------
+proxy-groups:
+  - name: "🚀 节点选择"
+    type: select
+    proxies:
+      - "♻️ 自动选择"
+      - "🤖 AI 服务"
+      - "🇭🇰 香港自动"
+      - "🇹🇼 台湾自动"
+      - "🇯🇵 日本自动"
+      - "🇸🇬 新加坡自动"
+      - "🇺🇸 美国自动"
+      - "🇪🇺 欧洲自动"
+      - "DIRECT"
+
+  - name: "🤖 AI 服务"
+    type: select
+    proxies:
+      - "🇺🇸 美国自动"
+      - "🇸🇬 新加坡自动"
+      - "🇯🇵 日本自动"
+      - "🚀 节点选择"
+
+  - name: "♻️ 自动选择"
+    type: url-test
+    use:
+      - MyAirport
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 50
+
+  - name: "📹 YouTube"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      - "♻️ 自动选择"
+      - "🇺🇸 美国自动"
+      - "🇭🇰 香港自动"
+      - "🇯🇵 日本自动"
+
+  - name: "📲 Telegram"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      - "🇸🇬 新加坡自动"
+      - "🇺🇸 美国自动"
+
+  - name: "🐟 漏网之鱼"
+    type: select
+    proxies:
+      - "🚀 节点选择"
+      - "♻️ 自动选择"
+      - "DIRECT"
+
+  # --- 地区自动组 ---
+  - name: "🇭🇰 香港自动"
+    type: url-test
+    use:
+      - MyAirport
+    filter: "(?i)(HK|Hong Kong|香港|HKG)"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+
+  - name: "🇹🇼 台湾自动"
+    type: url-test
+    use:
+      - MyAirport
+    filter: "(?i)(TW|Taiwan|台湾|TWN)"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+
+  - name: "🇯🇵 日本自动"
+    type: url-test
+    use:
+      - MyAirport
+    filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+
+  - name: "🇸🇬 新加坡自动"
+    type: url-test
+    use:
+      - MyAirport
+    filter: "(?i)(SG|Singapore|新加坡|SGP)"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+
+  - name: "🇺🇸 美国自动"
+    type: url-test
+    use:
+      - MyAirport
+    filter: "(?i)(US|United States|美国|USA)"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    
+  - name: "🇪🇺 欧洲自动"
+    type: url-test
+    use:
+      - MyAirport
+    filter: "(?i)(DE|Germany|德国|GB|UK|United Kingdom|英国|NL|Netherlands|荷兰)"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+
+# ---------------------------------------------------
+# 7. 规则提供者
+# ---------------------------------------------------
+rule-providers:
+  Google:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml"
+    path: ./ruleset/Google.yaml
+    interval: 86400
+
+  YouTube:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
+    path: ./ruleset/YouTube.yaml
+    interval: 86400
+
+  Telegram:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
+    path: ./ruleset/Telegram.yaml
+    interval: 86400
+
+  GitHub:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml"
+    path: ./ruleset/GitHub.yaml
+    interval: 86400
+
+  AI:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml" 
+    path: ./ruleset/AI.yaml
+    interval: 86400
+    
+  Microsoft:
+    type: http
+    behavior: classical
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml"
+    path: ./ruleset/Microsoft.yaml
+    interval: 86400
+
+# ---------------------------------------------------
+# 7. 规则匹配
+# ---------------------------------------------------
+rules:
+  - RULE-SET,AI,🤖 AI 服务
+  - DOMAIN-SUFFIX,gemini.google.com,🤖 AI 服务
+  - DOMAIN-SUFFIX,bard.google.com,🤖 AI 服务
+  - DOMAIN-SUFFIX,claude.ai,🤖 AI 服务
+  - DOMAIN-SUFFIX,anthropic.com,🤖 AI 服务
+  - DOMAIN-SUFFIX,notebooklm.google.com,🤖 AI 服务
+  - DOMAIN-SUFFIX,x.ai,🤖 AI 服务
+
+  - RULE-SET,YouTube,📹 YouTube
+  - RULE-SET,Telegram,📲 Telegram
+  - RULE-SET,GitHub,🚀 节点选择
+  - RULE-SET,Google,🚀 节点选择
+  - RULE-SET,Microsoft,🚀 节点选择
+  
+  - GEOSITE,google,🚀 节点选择
+  - GEOSITE,youtube,📹 YouTube
+  - GEOSITE,twitter,🚀 节点选择
+  - GEOSITE,telegram,📲 Telegram
+  - GEOSITE,github,🚀 节点选择
+
+  - GEOSITE,cn,DIRECT
+  - GEOIP,CN,DIRECT
+  - GEOIP,PRIVATE,DIRECT
+  
+  - MATCH,🐟 漏网之鱼
