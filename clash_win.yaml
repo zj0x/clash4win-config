@@ -32,6 +32,10 @@ keep-alive-interval: 15
 # 进程匹配模式，Windows下 strict 模式对规则匹配更精准
 find-process-mode: strict
 
+# 🔴 [新增] 全局 TLS 指纹模拟
+# 让流量看起来完全像 Chrome 浏览器发出的，防止运营商或目标网站针对非浏览器流量限速
+global-client-fingerprint: chrome
+
 # GeoData 模式
 geodata-mode: true
 geodata-loader: standard
@@ -404,6 +408,11 @@ rules:
   - GEOIP,PRIVATE,DIRECT,no-resolve
   
   # --- 以下是代理规则 (只有不属于国内的流量才会走到这里) ---
+  # 🔴🔴🔴 [核心修复] 阻断 YouTube 的 UDP (QUIC) 协议 🔴🔴🔴
+  # 强制 YouTube 使用 TCP (HTTP/2)，解决高宽带下 Auto 画质上不去的问题
+  # 解释：Mihomo 内核支持 AND 逻辑规则
+  - AND,((NETWORK,UDP),(GEOSITE,youtube)),REJECT
+  
   # 1. AI 服务 (Gemini, Claude, OpenAI, Copilot, Grok 等全覆盖)
   - RULE-SET,GenerativeAI,🤖 AI 服务
   
