@@ -363,7 +363,7 @@ rules:
   - AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,youtube)),REJECT
 
   # 微软直连
-  - GEOSITE,microsoft,DIRECT
+  - GEOSITE,microsoft@update,DIRECT
 
   # 其他
   - GEOSITE,youtube,YouTube
