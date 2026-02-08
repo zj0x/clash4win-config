@@ -77,58 +77,22 @@ dns:
   cache-algorithm: arc
 
   fake-ip-filter:
+    # --- 局域网与本地主机 ---
     - "+.lan"
     - "+.local"
+    - "localhost.ptlogin2.qq.com"
+
+    # --- Windows 连接性检查 (防止显示无网络) ---
     - "msftconnecttest.com"
     - "msftncsi.com"
     - "+.msftconnecttest.com"
     - "+.msftncsi.com"
-    - "*.msftconnecttest.com"
-    - "*.msftncsi.com"
-    - "stun.*.*"
-    - "stun.*.*.*"
-    - "+.srv.nintendo.net"
-    - "+.stun.playstation.net"
-    - "xbox.*.*.microsoft.com"
-    - "+.xboxlive.com"
-    - "+.battlenet.com.cn"
-    - "+.wotgame.cn"
-    - "+.wggames.cn"
-    - "+.wowsgame.cn"
-    - "+.wargaming.net"
-    - "*.qq.com"
-    - "music.163.com"
-    - "*.music.163.com"
-    - "*.126.net"
-    - "musicapi.taihe.com"
-    - "music.taihe.com"
-    - "songsearch.kugou.com"
-    - "trackercdn.kugou.com"
-    - "*.kuwo.cn"
-    - "api.joox.com"
-    - "y.qq.com"
-    - "*.y.qq.com"
-    - "streamoc.music.tc.qq.com"
-    - "mobileoc.music.tc.qq.com"
-    - "isure.stream.qqmusic.qq.com"
-    - "dl.stream.qqmusic.qq.com"
-    - "aqqmusic.tc.qq.com"
-    - "amobile.music.tc.qq.com"
-    - "*.xiami.com"
-    - "*.music.migu.cn"
-    - "music.migu.cn"
-    - "+.pool.ntp.org"
-    - "*.time.edu.cn"
-    - "*.ntp.org.cn"
-    - "+.360.cn"
-    - "+.360safe.com"
-    - "+.360.com"
-    - "+.qihoo.com"
-    - "+.360buy.com"
-    - "+.jd.com"
-    - "+.taobao.com"
-    - "+.tmall.com"
 
+    # --- NTP 时间同步服务 (防止时间校准失败) ---
+    - "+.pool.ntp.org"
+    - "+.ntp.org.cn"
+    - "+.time.edu.cn"
+  
   use-hosts: true
   use-system-hosts: true
 
