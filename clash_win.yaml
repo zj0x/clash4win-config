@@ -148,7 +148,7 @@ proxy-providers:
 # 6. 策略组 (保持原有逻辑，增加容错)
 # ---------------------------------------------------
 proxy-groups:
-  # 1. 主控制面板
+  # 1. 主面板 (入口)
   - name: "🚀 节点选择"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
@@ -165,8 +165,7 @@ proxy-groups:
       - "🇺🇸 美国手动"
       - "DIRECT"
 
-  # 2. AI 服务 (Gemini/ChatGPT/Claude)
-  # ✅ 策略：手动选择 (Select)。推荐锁定在“美国手动”或“新加坡手动”，保持 IP 连贯性。
+  # 2. AI 服务 (仅引用地区组，禁止引用“🚀 节点选择”)
   - name: "🤖 AI 服务"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
@@ -175,9 +174,10 @@ proxy-groups:
       - "🇸🇬 新加坡手动"
       - "🇯🇵 日本手动"
       - "🇹🇼 台湾手动"
+      # 如果需要自动兜底，可以保留这个，但不要加“🚀 节点选择”
+      - "♻️ 自动选择"
 
-  # 3. Google 搜索
-  # ✅ 策略：手动选择。防止因为自动测速跳到不喜欢的国家（如跳到日本导致搜索结果全是日文）。
+  # 3. Google 搜索 (仅引用地区组)
   - name: "🔍 Google"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
@@ -186,10 +186,8 @@ proxy-groups:
       - "🇭🇰 香港手动"
       - "🇸🇬 新加坡手动"
       - "🇯🇵 日本手动"
-      - "🚀 节点选择"
 
-  # 4. 视频媒体 (YouTube)
-  # ⚡ 策略：保持自动测速 (Url-Test)。视频对 IP 变动不敏感，对速度敏感。
+  # 4. YouTube (引用自动组)
   - name: "📹 YouTube"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
@@ -205,11 +203,11 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
     proxies:
-      - "♻️ 自动选择"
       - "🇸🇬 新加坡自动"
       - "🇺🇸 美国自动"
+      - "♻️ 自动选择"
 
-  # 6. 兜底策略
+  # 6. 兜底 (这个可以引用主节点，因为主节点不引用它，不会死循环)
   - name: "🐟 漏网之鱼"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Fish.png
@@ -217,7 +215,7 @@ proxy-groups:
       - "🚀 节点选择"
       - "♻️ 自动选择"
       - "DIRECT"
-  
+
   # 7. 全局自动测速
   - name: "♻️ 自动选择"
     type: url-test
@@ -229,7 +227,7 @@ proxy-groups:
     tolerance: 50
 
   # ============================================
-  # 地区分组：手动组 (Select) - 供 AI 和 Google 使用
+  # 地区分组：手动组 (Select)
   # ============================================
   - name: "🇭🇰 香港手动"
     type: select
@@ -267,7 +265,7 @@ proxy-groups:
     filter: "(?i)(US|United States|美国|USA)"
 
   # ============================================
-  # 地区分组：自动测速组 (Url-Test) - 供 YouTube 使用
+  # 地区分组：自动测速组 (Url-Test)
   # ============================================
   - name: "🇭🇰 香港自动"
     type: url-test
@@ -287,6 +285,7 @@ proxy-groups:
     filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
+    tolerance: 50
 
   - name: "🇸🇬 新加坡自动"
     type: url-test
@@ -296,6 +295,7 @@ proxy-groups:
     filter: "(?i)(SG|Singapore|新加坡|SGP)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
+    tolerance: 50
 
   - name: "🇺🇸 美国自动"
     type: url-test
@@ -315,6 +315,7 @@ proxy-groups:
     filter: "(?i)(DE|Germany|德国|GB|UK|United Kingdom|英国|NL|Netherlands|荷兰)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
+    tolerance: 50
 
 # ---------------------------------------------------
 # 7. 规则提供者
