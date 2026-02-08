@@ -12,7 +12,6 @@ tcp-concurrent: true
 keep-alive-interval: 30
 tcp-no-delay: true
 find-process-mode: strict
-global-client-fingerprint: chrome
 
 # --- Meta Geo 数据 ---
 geodata-mode: true
@@ -363,7 +362,7 @@ rules:
   - AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,youtube)),REJECT
 
   # 微软直连
-  - GEOSITE,microsoft@update,DIRECT
+  - GEOSITE,win-update,DIRECT
 
   # 其他
   - GEOSITE,youtube,YouTube
