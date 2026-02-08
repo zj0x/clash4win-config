@@ -46,6 +46,7 @@ tun:
     - any
   auto-route: true
   auto-detect-interface: true
+  mtu: 9000
 
 # ---------------------------------------------------
 # 3. 流量嗅探 (Sniffer) - 解决 IP 直连应用的规则匹配问题
@@ -60,8 +61,8 @@ sniffer:
       ports: [443, 8443]
     HTTP:
       ports: [80, 8080-8880]
-    QUIC:
-      ports: [443, 8443]
+    #QUIC:
+      #ports: [443, 8443]
   # 强制不对以下域名进行嗅探（防止米哈游等游戏断流）
   skip-domain:
     - "Mijia Cloud"
@@ -98,23 +99,18 @@ dns:
   
   # 默认 DNS (用于非策略组域名的解析兜底)
   nameserver:
-    - https://dns.google/dns-query
-    - https://1.1.1.1/dns-query
+    - "https://dns.google/dns-query#h3=true"
+    - "https://1.1.1.1/dns-query#h3=true"
     
 
   # 🔴 策略分流 (Split DNS) - 这里的顺序和写法至关重要
   nameserver-policy:
     # 1. 所有的 Google 和 AI 服务，强制使用国外 DoH (防污染，且解析出离代理最近的 IP)
-    "geosite:google,youtube,telegram,openai,gfw":
+    "geosite:google,youtube,telegram,openai,gfw,geolocation-!cn":
       - "https://1.1.1.1/dns-query#h3=true"
       - "https://8.8.8.8/dns-query#h3=true"
       
-    # 2. 国外常用站点，走国外 DNS
-    "geosite:geolocation-!cn":
-      - "https://1.1.1.1/dns-query#h3=true"
-      - "https://8.8.8.8/dns-query#h3=true"
-
-    # 3. 国内域名，强制走国内 DNS (腾讯+阿里)
+    # 2. 国内域名，强制走国内 DNS (腾讯+阿里)
     "geosite:cn,geolocation-cn,private,apple,steam@cn,category-games@cn":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
@@ -160,6 +156,7 @@ proxy-providers:
       client-fingerprint: chrome
       # 建议配合 skip-cert-verify: true (可选，防止部分自签证书节点报错)
       skip-cert-verify: true
+      udp: true
 
 # ---------------------------------------------------
 # 6. 策略组 (保持原有逻辑，增加容错)
