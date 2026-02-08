@@ -97,12 +97,17 @@ dns:
       - "https://1.1.1.1/dns-query#h3=true"
       - "https://8.8.8.8/dns-query#h3=true"
       
-    # 2. 国外常用站点，走国外 DNS
+    # 2. 学术科研域名，强制走国外 DNS (防止被 GeoSite 误判为国内站点)
+    "geosite:category-scholar-!cn,+.nature.com,+.science.org,+.sciencemag.org,+.rsc.org,+.acs.org,+.springer.com,+.springerlink.com,+.wiley.com,+.ieee.org,+.sciencedirect.com,+.elsevier.com,+.tandfonline.com,+.taylorandfrancis.com,+.cell.com,+.jstor.org,+.oxfordacademic.com,+.oup.com,+.cambridge.org,+.ncbi.nlm.nih.gov,+.arxiv.org,+.webofscience.com,+.scopus.com,+.researchgate.net,+.doi.org,+.pnas.org,+.aps.org,+.iop.org,+.mdpi.com,+.biorxiv.org,+.medrxiv.org,+.ssrn.com,+.annualreviews.org,+.royalsocietypublishing.org,+.plos.org,+.frontiersin.org,+.sagepub.com":
+      - "https://1.1.1.1/dns-query#h3=true"
+      - "https://8.8.8.8/dns-query#h3=true"
+      
+    # 3. 国外常用站点，走国外 DNS
     "geosite:geolocation-!cn":
       - "https://1.1.1.1/dns-query#h3=true"
       - "https://8.8.8.8/dns-query#h3=true"
 
-    # 3. 国内域名，强制走国内 DNS (腾讯+阿里)
+    # 4. 国内域名，强制走国内 DNS (腾讯+阿里)
     "geosite:cn,private,apple,steam@cn":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
@@ -159,6 +164,7 @@ proxy-groups:
       - "🔍 Google"
       - "📹 YouTube"
       - "📲 Telegram"
+      - "📚 学术科研"
       - "香港Select"
       - "台湾Select"
       - "日本Select"
@@ -211,7 +217,20 @@ proxy-groups:
       - "♻️ 自动选择"
       - "手动切换"
 
-  # 6. 兜底
+  # 6. 学术科研
+  - name: "📚 学术科研"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Scholar.png
+    proxies:
+      - "🚀 节点选择"
+      - "♻️ 自动选择"
+      - "香港Select"
+      - "日本Select"
+      - "美国Select"
+      - "新加坡Select"
+      - "手动切换"
+
+  # 7. 兜底
   - name: "🐟 漏网之鱼"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
@@ -221,7 +240,7 @@ proxy-groups:
       - "手动切换"
       - "DIRECT"
 
-  # 7. 全局自动测速
+  # 8. 全局自动测速
   - name: "♻️ 自动选择"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
@@ -231,7 +250,7 @@ proxy-groups:
     interval: 300
     tolerance: 50
 
-  # 8. 手动切换 (全节点手动选择)
+  # 9. 手动切换 (全节点手动选择)
   - name: "手动切换"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png
@@ -377,7 +396,7 @@ rule-providers:
     interval: 86400
 
 # ---------------------------------------------------
-# 7. 规则匹配
+# 8. 规则匹配
 # ---------------------------------------------------
 rules:
   # 1. AI 服务 (Gemini, Claude, OpenAI, Copilot, Grok 等全覆盖)
@@ -392,17 +411,59 @@ rules:
   # 3. 微软服务 (GitHub/Copilot 相关)
   - RULE-SET,Microsoft,🚀 节点选择
   
-  # 4. GeoSite 补充
+  # 4. 学术科研 (防止被 GeoSite 规则库误判为中国站点导致 DNS 解析错误)
+  # 主要学术出版商
+  - DOMAIN-SUFFIX,nature.com,📚 学术科研
+  - DOMAIN-SUFFIX,science.org,📚 学术科研
+  - DOMAIN-SUFFIX,sciencemag.org,📚 学术科研
+  - DOMAIN-SUFFIX,rsc.org,📚 学术科研
+  - DOMAIN-SUFFIX,acs.org,📚 学术科研
+  - DOMAIN-SUFFIX,springer.com,📚 学术科研
+  - DOMAIN-SUFFIX,springerlink.com,📚 学术科研
+  - DOMAIN-SUFFIX,wiley.com,📚 学术科研
+  - DOMAIN-SUFFIX,ieee.org,📚 学术科研
+  - DOMAIN-SUFFIX,sciencedirect.com,📚 学术科研
+  - DOMAIN-SUFFIX,elsevier.com,📚 学术科研
+  - DOMAIN-SUFFIX,cell.com,📚 学术科研
+  - DOMAIN-SUFFIX,tandfonline.com,📚 学术科研
+  - DOMAIN-SUFFIX,taylorandfrancis.com,📚 学术科研
+  # 学术数据库与索引
+  - DOMAIN-SUFFIX,webofscience.com,📚 学术科研
+  - DOMAIN-SUFFIX,scopus.com,📚 学术科研
+  - DOMAIN-SUFFIX,jstor.org,📚 学术科研
+  - DOMAIN-SUFFIX,doi.org,📚 学术科研
+  - DOMAIN-SUFFIX,researchgate.net,📚 学术科研
+  - DOMAIN-SUFFIX,ncbi.nlm.nih.gov,📚 学术科研
+  # 预印本与开放获取
+  - DOMAIN-SUFFIX,arxiv.org,📚 学术科研
+  - DOMAIN-SUFFIX,biorxiv.org,📚 学术科研
+  - DOMAIN-SUFFIX,medrxiv.org,📚 学术科研
+  - DOMAIN-SUFFIX,ssrn.com,📚 学术科研
+  - DOMAIN-SUFFIX,plos.org,📚 学术科研
+  - DOMAIN-SUFFIX,frontiersin.org,📚 学术科研
+  - DOMAIN-SUFFIX,mdpi.com,📚 学术科研
+  # 其他重要学术出版社
+  - DOMAIN-SUFFIX,oxfordacademic.com,📚 学术科研
+  - DOMAIN-SUFFIX,oup.com,📚 学术科研
+  - DOMAIN-SUFFIX,cambridge.org,📚 学术科研
+  - DOMAIN-SUFFIX,sagepub.com,📚 学术科研
+  - DOMAIN-SUFFIX,pnas.org,📚 学术科研
+  - DOMAIN-SUFFIX,aps.org,📚 学术科研
+  - DOMAIN-SUFFIX,iop.org,📚 学术科研
+  - DOMAIN-SUFFIX,annualreviews.org,📚 学术科研
+  - DOMAIN-SUFFIX,royalsocietypublishing.org,📚 学术科研
+
+  # 5. GeoSite 补充
   - GEOSITE,google,🔍 Google
   - GEOSITE,youtube,📹 YouTube
   - GEOSITE,telegram,📲 Telegram
   - GEOSITE,github,🚀 节点选择
   - GEOSITE,openai,🤖 AI 服务
 
-  # 5. 直连规则
+  # 6. 直连规则
   - GEOSITE,cn,DIRECT
   - GEOIP,CN,DIRECT
   - GEOIP,PRIVATE,DIRECT
   
-  # 6. 兜底
+  # 7. 兜底
   - MATCH,🐟 漏网之鱼
