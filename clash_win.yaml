@@ -75,7 +75,7 @@ dns:
   respect-rules: true         # 遵循规则中的 DNS 设置 (配合 search domain)
   
   # 🔴 关键优化：指定代理节点本身域名的解析服务器
-  # 防止代理节点域名被污染，同时避免“先有鸡还是先有蛋”的解析死循环
+  # 防止代理节点域名被污染
   proxy-server-nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
@@ -165,7 +165,7 @@ proxy-groups:
       - "🇺🇸 美国手动"
       - "DIRECT"
 
-  # 2. AI 服务 (仅引用地区组，禁止引用“🚀 节点选择”)
+  # 2. AI 服务
   - name: "🤖 AI 服务"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
@@ -174,10 +174,9 @@ proxy-groups:
       - "🇸🇬 新加坡手动"
       - "🇯🇵 日本手动"
       - "🇹🇼 台湾手动"
-      # 如果需要自动兜底，可以保留这个，但不要加“🚀 节点选择”
       - "♻️ 自动选择"
 
-  # 3. Google 搜索 (仅引用地区组)
+  # 3. Google 搜索 
   - name: "🔍 Google"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
@@ -187,7 +186,7 @@ proxy-groups:
       - "🇸🇬 新加坡手动"
       - "🇯🇵 日本手动"
 
-  # 4. YouTube (引用自动组)
+  # 4. YouTube 
   - name: "📹 YouTube"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
@@ -207,7 +206,7 @@ proxy-groups:
       - "🇺🇸 美国自动"
       - "♻️ 自动选择"
 
-  # 6. 兜底 (这个可以引用主节点，因为主节点不引用它，不会死循环)
+  # 6. 兜底
   - name: "🐟 漏网之鱼"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Fish.png
