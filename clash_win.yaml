@@ -111,7 +111,6 @@ dns:
   # 以下域名不返回假 IP，而是返回真实 IP。
   # 解决 Windows 网络探测显示“无网络”、STUN 穿透失败、游戏联机失败等问题
   fake-ip-filter:
-    - "*"  # 如果你发现某些局域网设备无法连接，可以保留这个通配符，但通常不建议
     - "+.lan"
     - "+.local"
     - "+.market.xboxcn.com"
@@ -229,7 +228,7 @@ proxy-groups:
       - MyAirport
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 50
+    tolerance: 150
 
   # 8. 手动切换 (全节点手动选择)
   - name: "手动切换"
@@ -287,7 +286,7 @@ proxy-groups:
     filter: "(?i)(HK|Hong Kong|香港|HKG)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 50
+    tolerance: 150
 
   - name: "日本Auto"
     type: url-test
@@ -297,7 +296,7 @@ proxy-groups:
     filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 50
+    tolerance: 150
 
   - name: "新加坡Auto"
     type: url-test
@@ -307,7 +306,7 @@ proxy-groups:
     filter: "(?i)(SG|Singapore|新加坡|SGP)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 50
+    tolerance: 150
 
   - name: "美国Auto"
     type: url-test
@@ -317,7 +316,7 @@ proxy-groups:
     filter: "(?i)(United States|美国|USA)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 50
+    tolerance: 150
     
   - name: "欧洲Auto"
     type: url-test
@@ -327,7 +326,7 @@ proxy-groups:
     filter: "(?i)(DE|Germany|德国|GB|UK|United Kingdom|英国|NL|Netherlands|荷兰)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 50
+    tolerance: 150
 
 # ---------------------------------------------------
 # 7. 规则提供者
@@ -384,9 +383,9 @@ rules:
   - RULE-SET,GenerativeAI,🤖 AI 服务
   
   # 2. 常用服务
-  - RULE-SET,YouTube,📹 YouTube
-  - RULE-SET,Telegram,📲 Telegram
-  - RULE-SET,Google,🔍 Google  
+  #- RULE-SET,YouTube,📹 YouTube
+  #- RULE-SET,Telegram,📲 Telegram
+  #- RULE-SET,Google,🔍 Google  
   - RULE-SET,Scholar,🚀 节点选择
   
   # 3. 微软服务 (GitHub/Copilot 相关)
