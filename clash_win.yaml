@@ -154,6 +154,7 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
     proxies:
       - "♻️ 自动选择"
+      - "手动切换"
       - "🤖 AI 服务"
       - "🔍 Google"
       - "📹 YouTube"
@@ -175,6 +176,7 @@ proxy-groups:
       - "🇯🇵 日本手动"
       - "🇹🇼 台湾手动"
       - "♻️ 自动选择"
+      - "手动切换"
 
   # 3. Google 搜索 
   - name: "🔍 Google"
@@ -185,6 +187,7 @@ proxy-groups:
       - "🇭🇰 香港手动"
       - "🇸🇬 新加坡手动"
       - "🇯🇵 日本手动"
+      - "手动切换"
 
   # 4. YouTube 
   - name: "📹 YouTube"
@@ -196,6 +199,7 @@ proxy-groups:
       - "🇭🇰 香港自动"
       - "🇯🇵 日本自动"
       - "🇸🇬 新加坡自动"
+      - "手动切换"
 
   # 5. Telegram
   - name: "📲 Telegram"
@@ -205,14 +209,16 @@ proxy-groups:
       - "🇸🇬 新加坡自动"
       - "🇺🇸 美国自动"
       - "♻️ 自动选择"
+      - "手动切换"
 
   # 6. 兜底
   - name: "🐟 漏网之鱼"
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Fish.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
     proxies:
       - "🚀 节点选择"
       - "♻️ 自动选择"
+      - "手动切换"
       - "DIRECT"
 
   # 7. 全局自动测速
@@ -224,6 +230,13 @@ proxy-groups:
     url: "http://www.gstatic.com/generate_204"
     interval: 300
     tolerance: 50
+
+  # 8. 手动切换 (全节点手动选择)
+  - name: "手动切换"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png
+    use:
+      - MyAirport
 
   # ============================================
   # 地区分组：手动组 (Select)
@@ -237,7 +250,7 @@ proxy-groups:
 
   - name: "🇹🇼 台湾手动"
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
     use:
       - MyAirport
     filter: "(?i)(TW|Taiwan|台湾|TWN)"
