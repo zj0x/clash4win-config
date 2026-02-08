@@ -32,10 +32,6 @@ keep-alive-interval: 15
 # 进程匹配模式，Windows下 strict 模式对规则匹配更精准
 find-process-mode: strict
 
-# 🔴 [新增] 全局 TLS 指纹模拟
-# 让流量看起来完全像 Chrome 浏览器发出的，防止运营商或目标网站针对非浏览器流量限速
-global-client-fingerprint: chrome
-
 # GeoData 模式
 geodata-mode: true
 geodata-loader: standard
@@ -158,6 +154,12 @@ proxy-providers:
       url: http://www.gstatic.com/generate_204
     # 排除倍率过高或无效节点
     filter: "(?i)(HK|TW|JP|SG|US|DE|GB|NL|香港|台湾|日本|新加坡|美国|德国|英国|荷兰)"
+    
+    override:
+      # 强制给订阅里的所有节点打上 chrome 指纹
+      client-fingerprint: chrome
+      # 建议配合 skip-cert-verify: true (可选，防止部分自签证书节点报错)
+      skip-cert-verify: true
 
 # ---------------------------------------------------
 # 6. 策略组 (保持原有逻辑，增加容错)
