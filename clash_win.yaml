@@ -159,11 +159,11 @@ proxy-groups:
       - "🔍 Google"
       - "📹 YouTube"
       - "📲 Telegram"
-      - "🇭🇰 香港手动"
-      - "🇹🇼 台湾手动"
-      - "🇯🇵 日本手动"
-      - "🇸🇬 新加坡手动"
-      - "🇺🇸 美国手动"
+      - "香港Select"
+      - "台湾Select"
+      - "日本Select"
+      - "新加坡Select"
+      - "美国Select"
       - "DIRECT"
 
   # 2. AI 服务
@@ -171,10 +171,10 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
     proxies:
-      - "🇺🇸 美国手动"
-      - "🇸🇬 新加坡手动"
-      - "🇯🇵 日本手动"
-      - "🇹🇼 台湾手动"
+      - "美国Select"
+      - "新加坡Select"
+      - "日本Select"
+      - "台湾Select"
       - "♻️ 自动选择"
       - "手动切换"
 
@@ -183,10 +183,10 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
     proxies:
-      - "🇺🇸 美国手动"
-      - "🇭🇰 香港手动"
-      - "🇸🇬 新加坡手动"
-      - "🇯🇵 日本手动"
+      - "美国Select"
+      - "香港Select"
+      - "新加坡Select"
+      - "日本Select"
       - "手动切换"
 
   # 4. YouTube 
@@ -195,10 +195,10 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
     proxies:
       - "♻️ 自动选择"
-      - "🇺🇸 美国自动"
-      - "🇭🇰 香港自动"
-      - "🇯🇵 日本自动"
-      - "🇸🇬 新加坡自动"
+      - "美国Auto"
+      - "香港Auto"
+      - "日本Auto"
+      - "新加坡Auto"
       - "手动切换"
 
   # 5. Telegram
@@ -206,8 +206,8 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
     proxies:
-      - "🇸🇬 新加坡自动"
-      - "🇺🇸 美国自动"
+      - "新加坡Auto"
+      - "美国Auto"
       - "♻️ 自动选择"
       - "手动切换"
 
