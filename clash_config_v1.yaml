@@ -12,7 +12,7 @@ tcp-concurrent: true
 keep-alive-interval: 30
 tcp-no-delay: true
 find-process-mode: strict
-#global-client-fingerprint: chrome
+global-client-fingerprint: chrome
 
 # --- Meta Geo 数据 ---
 geodata-mode: true
@@ -173,7 +173,6 @@ dns:
 proxy-providers:
   我的节点:
     type: http
-    # 修复：填入了占位符防止报错，请替换为真实链接
     url: "https://example.com/replace-me"
     interval: 3600
     path: ./providers/my-nodes.yaml
@@ -396,7 +395,7 @@ rules:
   - DOMAIN-SUFFIX,edgeservices.bing.com,AI
   - DOMAIN-SUFFIX,bing.com,AI
 
-  # 阻断 QUIC (仅限 Meta 内核)
+  # 阻断 QUIC
   - AND,((NETWORK,UDP),(DST-PORT,443),(GEOSITE,youtube)),REJECT
 
   # 微软直连
