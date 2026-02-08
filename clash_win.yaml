@@ -32,9 +32,6 @@ keep-alive-interval: 15
 # 进程匹配模式，Windows下 strict 模式对规则匹配更精准
 find-process-mode: strict
 
-# 浏览器指纹模拟，防止 TLS 指纹被墙识别
-global-client-fingerprint: chrome
-
 # GeoData 模式
 geodata-mode: true
 geodata-loader: standard
@@ -151,11 +148,14 @@ proxy-providers:
 # 6. 策略组 (保持原有逻辑，增加容错)
 # ---------------------------------------------------
 proxy-groups:
+  # 1. 主手动选择器 (作为最顶层，可以调用下层所有组)
   - name: "🚀 节点选择"
     type: select
     proxies:
       - "♻️ 自动选择"
       - "🤖 AI 服务"
+      - "📹 YouTube"
+      - "📲 Telegram"
       - "🇭🇰 香港自动"
       - "🇹🇼 台湾自动"
       - "🇯🇵 日本自动"
@@ -164,14 +164,16 @@ proxy-groups:
       - "🇪🇺 欧洲自动"
       - "DIRECT"
 
+  # 2. 人工智能 - 仅引用地区组，不再引用“节点选择”
   - name: "🤖 AI 服务"
     type: select
     proxies:
       - "🇺🇸 美国自动"
       - "🇸🇬 新加坡自动"
       - "🇯🇵 日本自动"
-      - "🚀 节点选择"
+      - "♻️ 自动选择" # 如果指定地区挂了，可以用自动测速兜底
 
+  # 3. 自动测速
   - name: "♻️ 自动选择"
     type: url-test
     use:
@@ -180,22 +182,26 @@ proxy-groups:
     interval: 300
     tolerance: 50
 
+  # 4. 视频媒体 - 仅引用地区组
   - name: "📹 YouTube"
     type: select
     proxies:
-      - "🚀 节点选择"
-      - "♻️ 自动选择"
       - "🇺🇸 美国自动"
       - "🇭🇰 香港自动"
       - "🇯🇵 日本自动"
+      - "🇸🇬 新加坡自动"
+      - "♻️ 自动选择"
 
+  # 5. Telegram
   - name: "📲 Telegram"
     type: select
     proxies:
-      - "🚀 节点选择"
       - "🇸🇬 新加坡自动"
       - "🇺🇸 美国自动"
+      - "🇭🇰 香港自动"
+      - "♻️ 自动选择"
 
+  # 6. 漏网之鱼 - 可以引用主节点选择，作为最终出口
   - name: "🐟 漏网之鱼"
     type: select
     proxies:
@@ -203,7 +209,7 @@ proxy-groups:
       - "♻️ 自动选择"
       - "DIRECT"
 
-  # --- 地区自动组 ---
+  # --- 地区自动组 (保持不变) ---
   - name: "🇭🇰 香港自动"
     type: url-test
     use:
