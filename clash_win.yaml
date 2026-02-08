@@ -148,86 +148,140 @@ proxy-providers:
 # 6. 策略组 (保持原有逻辑，增加容错)
 # ---------------------------------------------------
 proxy-groups:
-  # 1. 主手动选择器 (作为最顶层，可以调用下层所有组)
+  # 1. 主控制面板
   - name: "🚀 节点选择"
     type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
     proxies:
       - "♻️ 自动选择"
       - "🤖 AI 服务"
+      - "🔍 Google"
       - "📹 YouTube"
       - "📲 Telegram"
-      - "🇭🇰 香港自动"
-      - "🇹🇼 台湾自动"
-      - "🇯🇵 日本自动"
-      - "🇸🇬 新加坡自动"
-      - "🇺🇸 美国自动"
-      - "🇪🇺 欧洲自动"
+      - "🇭🇰 香港手动"
+      - "🇹🇼 台湾手动"
+      - "🇯🇵 日本手动"
+      - "🇸🇬 新加坡手动"
+      - "🇺🇸 美国手动"
       - "DIRECT"
 
-  # 2. 人工智能 - 仅引用地区组，不再引用“节点选择”
+  # 2. AI 服务 (Gemini/ChatGPT/Claude)
+  # ✅ 策略：手动选择 (Select)。推荐锁定在“美国手动”或“新加坡手动”，保持 IP 连贯性。
   - name: "🤖 AI 服务"
     type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
     proxies:
-      - "🇺🇸 美国自动"
-      - "🇸🇬 新加坡自动"
-      - "🇯🇵 日本自动"
-      - "♻️ 自动选择" # 如果指定地区挂了，可以用自动测速兜底
+      - "🇺🇸 美国手动"
+      - "🇸🇬 新加坡手动"
+      - "🇯🇵 日本手动"
+      - "🇹🇼 台湾手动"
 
-  # 3. 自动测速
+  # 3. Google 搜索
+  # ✅ 策略：手动选择。防止因为自动测速跳到不喜欢的国家（如跳到日本导致搜索结果全是日文）。
+  - name: "🔍 Google"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+    proxies:
+      - "🇺🇸 美国手动"
+      - "🇭🇰 香港手动"
+      - "🇸🇬 新加坡手动"
+      - "🇯🇵 日本手动"
+      - "🚀 节点选择"
+
+  # 4. 视频媒体 (YouTube)
+  # ⚡ 策略：保持自动测速 (Url-Test)。视频对 IP 变动不敏感，对速度敏感。
+  - name: "📹 YouTube"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+    proxies:
+      - "♻️ 自动选择"
+      - "🇺🇸 美国自动"
+      - "🇭🇰 香港自动"
+      - "🇯🇵 日本自动"
+      - "🇸🇬 新加坡自动"
+
+  # 5. Telegram
+  - name: "📲 Telegram"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+    proxies:
+      - "♻️ 自动选择"
+      - "🇸🇬 新加坡自动"
+      - "🇺🇸 美国自动"
+
+  # 6. 兜底策略
+  - name: "🐟 漏网之鱼"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Fish.png
+    proxies:
+      - "🚀 节点选择"
+      - "♻️ 自动选择"
+      - "DIRECT"
+  
+  # 7. 全局自动测速
   - name: "♻️ 自动选择"
     type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
     use:
       - MyAirport
     url: "http://www.gstatic.com/generate_204"
     interval: 300
     tolerance: 50
 
-  # 4. 视频媒体 - 仅引用地区组
-  - name: "📹 YouTube"
+  # ============================================
+  # 地区分组：手动组 (Select) - 供 AI 和 Google 使用
+  # ============================================
+  - name: "🇭🇰 香港手动"
     type: select
-    proxies:
-      - "🇺🇸 美国自动"
-      - "🇭🇰 香港自动"
-      - "🇯🇵 日本自动"
-      - "🇸🇬 新加坡自动"
-      - "♻️ 自动选择"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+    use:
+      - MyAirport
+    filter: "(?i)(HK|Hong Kong|香港|HKG)"
 
-  # 5. Telegram
-  - name: "📲 Telegram"
+  - name: "🇹🇼 台湾手动"
     type: select
-    proxies:
-      - "🇸🇬 新加坡自动"
-      - "🇺🇸 美国自动"
-      - "🇭🇰 香港自动"
-      - "♻️ 自动选择"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    use:
+      - MyAirport
+    filter: "(?i)(TW|Taiwan|台湾|TWN)"
 
-  # 6. 漏网之鱼 - 可以引用主节点选择，作为最终出口
-  - name: "🐟 漏网之鱼"
+  - name: "🇯🇵 日本手动"
     type: select
-    proxies:
-      - "🚀 节点选择"
-      - "♻️ 自动选择"
-      - "DIRECT"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+    use:
+      - MyAirport
+    filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
 
-  # --- 地区自动组 (保持不变) ---
+  - name: "🇸🇬 新加坡手动"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+    use:
+      - MyAirport
+    filter: "(?i)(SG|Singapore|新加坡|SGP)"
+
+  - name: "🇺🇸 美国手动"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+    use:
+      - MyAirport
+    filter: "(?i)(US|United States|美国|USA)"
+
+  # ============================================
+  # 地区分组：自动测速组 (Url-Test) - 供 YouTube 使用
+  # ============================================
   - name: "🇭🇰 香港自动"
     type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
       - MyAirport
     filter: "(?i)(HK|Hong Kong|香港|HKG)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-
-  - name: "🇹🇼 台湾自动"
-    type: url-test
-    use:
-      - MyAirport
-    filter: "(?i)(TW|Taiwan|台湾|TWN)"
-    url: "http://www.gstatic.com/generate_204"
-    interval: 300
+    tolerance: 50
 
   - name: "🇯🇵 日本自动"
     type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
       - MyAirport
     filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
@@ -236,6 +290,7 @@ proxy-groups:
 
   - name: "🇸🇬 新加坡自动"
     type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
       - MyAirport
     filter: "(?i)(SG|Singapore|新加坡|SGP)"
@@ -244,14 +299,17 @@ proxy-groups:
 
   - name: "🇺🇸 美国自动"
     type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
       - MyAirport
     filter: "(?i)(US|United States|美国|USA)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
+    tolerance: 50
     
   - name: "🇪🇺 欧洲自动"
     type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/European_Union.png
     use:
       - MyAirport
     filter: "(?i)(DE|Germany|德国|GB|UK|United Kingdom|英国|NL|Netherlands|荷兰)"
@@ -283,20 +341,14 @@ rule-providers:
     path: ./ruleset/Telegram.yaml
     interval: 86400
 
-  GitHub:
+  GenerativeAI:
     type: http
     behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml"
-    path: ./ruleset/GitHub.yaml
+    format: text 
+    url: "https://raw.githubusercontent.com/EAlyce/conf/refs/heads/main/Rule/OpenAI.list"
+    path: ./ruleset/EAlyce_AI.list
     interval: 86400
 
-  AI:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml" 
-    path: ./ruleset/AI.yaml
-    interval: 86400
-    
   Microsoft:
     type: http
     behavior: classical
@@ -308,28 +360,28 @@ rule-providers:
 # 7. 规则匹配
 # ---------------------------------------------------
 rules:
-  - RULE-SET,AI,🤖 AI 服务
-  - DOMAIN-SUFFIX,gemini.google.com,🤖 AI 服务
-  - DOMAIN-SUFFIX,bard.google.com,🤖 AI 服务
-  - DOMAIN-SUFFIX,claude.ai,🤖 AI 服务
-  - DOMAIN-SUFFIX,anthropic.com,🤖 AI 服务
-  - DOMAIN-SUFFIX,notebooklm.google.com,🤖 AI 服务
-  - DOMAIN-SUFFIX,x.ai,🤖 AI 服务
-
+  # 1. AI 服务 (Gemini, Claude, OpenAI, Copilot, Grok 等全覆盖)
+  - RULE-SET,GenerativeAI,🤖 AI 服务
+  
+  # 2. 常用服务
   - RULE-SET,YouTube,📹 YouTube
   - RULE-SET,Telegram,📲 Telegram
-  - RULE-SET,GitHub,🚀 节点选择
-  - RULE-SET,Google,🚀 节点选择
+  - RULE-SET,Google,🔍 Google  # Google 现在走单独的手动组
+  
+  # 3. 微软服务 (GitHub/Copilot 相关)
   - RULE-SET,Microsoft,🚀 节点选择
   
-  - GEOSITE,google,🚀 节点选择
+  # 4. GeoSite 补充
+  - GEOSITE,google,🔍 Google
   - GEOSITE,youtube,📹 YouTube
-  - GEOSITE,twitter,🚀 节点选择
   - GEOSITE,telegram,📲 Telegram
   - GEOSITE,github,🚀 节点选择
+  - GEOSITE,openai,🤖 AI 服务
 
+  # 5. 直连规则
   - GEOSITE,cn,DIRECT
   - GEOIP,CN,DIRECT
   - GEOIP,PRIVATE,DIRECT
   
+  # 6. 兜底
   - MATCH,🐟 漏网之鱼
