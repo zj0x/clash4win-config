@@ -18,7 +18,7 @@ external-controller: 127.0.0.1:9090
 # 2. Mihomo 核心性能参数
 # ---------------------------------------------------
 # 开启 HTTP/3 (QUIC) 支持，大幅降低握手延迟，抗丢包能力强
-prefer-h3: true 
+#prefer-h3: true 
 
 # 统一延迟计算，防止节点抖动
 unified-delay: true
@@ -89,7 +89,6 @@ dns:
   default-nameserver:
     - 223.5.5.5
     - 119.29.29.29
-    - 1.1.1.1 # 增加一个国外备用
   
   # 🔴 关键优化：指定代理节点本身域名的解析服务器
   # 防止代理节点域名被污染
@@ -412,24 +411,23 @@ rules:
   # 解释：Mihomo 内核支持 AND 逻辑规则
   - AND,((NETWORK,UDP),(GEOSITE,youtube)),REJECT
   
-  # 1. AI 服务 (Gemini, Claude, OpenAI, Copilot, Grok 等全覆盖)
+  # 3. 代理规则
   - RULE-SET,GenerativeAI,🤖 AI 服务
-  
-  # 2. 常用服务
-  #- RULE-SET,YouTube,📹 YouTube
-  #- RULE-SET,Telegram,📲 Telegram
-  #- RULE-SET,Google,🔍 Google  
-  - RULE-SET,Scholar,🚀 节点选择
-  
-  # 3. 微软服务 (GitHub/Copilot 相关)
-  - RULE-SET,Microsoft,🚀 节点选择
-  
-  # 4. GeoSite 补充
-  - GEOSITE,google,🔍 Google
-  - GEOSITE,youtube,📹 YouTube
-  - GEOSITE,telegram,📲 Telegram
-  - GEOSITE,github,🚀 节点选择
   - GEOSITE,openai,🤖 AI 服务
   
-  # 5. 兜底
+  # 🔴 [修正] 恢复 RULE-SET 以确保覆盖面
+  - RULE-SET,YouTube,📹 YouTube
+  - GEOSITE,youtube,📹 YouTube
+  
+  - RULE-SET,Telegram,📲 Telegram
+  - GEOSITE,telegram,📲 Telegram
+  
+  - RULE-SET,Google,🔍 Google  
+  - GEOSITE,google,🔍 Google
+  
+  - RULE-SET,Scholar,🚀 节点选择
+  - RULE-SET,Microsoft,🚀 节点选择
+  - GEOSITE,github,🚀 节点选择
+  
+  # 4. 兜底
   - MATCH,🐟 漏网之鱼
