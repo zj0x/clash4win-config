@@ -5,8 +5,6 @@
 # ---------------------------------------------------
 # 1. 基础监听与端口
 # ---------------------------------------------------
-port: 7890
-socks-port: 7891
 mixed-port: 7890
 allow-lan: true
 mode: rule
@@ -46,7 +44,7 @@ tun:
     - any
   auto-route: true
   auto-detect-interface: true
-  mtu: 9000
+  mtu: auto
 
 # ---------------------------------------------------
 # 3. 流量嗅探 (Sniffer)
@@ -143,7 +141,7 @@ proxy-providers:
     path: ./proxies/airport.yaml
     health-check:
       enable: true
-      interval: 600
+      interval: 300
       url: http://www.gstatic.com/generate_204
     filter: "(?i)(HK|TW|JP|SG|US|DE|GB|NL|香港|台湾|日本|新加坡|美国|德国|英国|荷兰)"
     override:
