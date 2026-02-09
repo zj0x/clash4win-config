@@ -336,6 +336,46 @@ proxy-groups:
 # 7. 规则提供者
 # ---------------------------------------------------
 rule-providers:
+  sukka_lan:
+    type: http
+    behavior: classical
+    format: text
+    url: https://ruleset.skk.moe/Clash/non_ip/lan.txt
+    path: ./ruleset/sukka_lan.txt
+    interval: 43200
+  
+  sukka_apple_cn:
+    type: http
+    behavior: classical
+    format: text
+    url: https://ruleset.skk.moe/Clash/non_ip/apple_cn.txt
+    path: ./ruleset/sukka_apple_cn.txt
+    interval: 43200
+
+  sukka_microsoft_cn:
+    type: http
+    behavior: classical
+    format: text
+    url: https://ruleset.skk.moe/Clash/non_ip/microsoft_cdn.txt
+    path: ./ruleset/sukka_microsoft_cn.txt
+    interval: 43200
+
+  sukka_download:
+    type: http
+    behavior: domain # 纯域名匹配，效率极高
+    format: text
+    url: https://ruleset.skk.moe/Clash/domainset/download.txt
+    path: ./ruleset/sukka_download.txt
+    interval: 43200
+
+  sukka_china_ip:
+    type: http
+    behavior: ipcidr
+    format: text
+    url: https://ruleset.skk.moe/Clash/ip/china_ip.txt
+    path: ./ruleset/sukka_china_ip.txt
+    interval: 43200
+  
   Google:
     type: http
     behavior: classical
@@ -384,12 +424,15 @@ rule-providers:
 # ---------------------------------------------------
 rules:
   # 国内直连规则
+  - RULE-SET,sukka_lan,DIRECT
+  - RULE-SET,sukka_apple_cn,DIRECT
+  - RULE-SET,sukka_microsoft_cn,DIRECT
+  - RULE-SET,sukka_download,DIRECT
   - GEOSITE,cn,DIRECT
   - GEOSITE,geolocation-cn,DIRECT
   - GEOSITE,private,DIRECT
   - GEOSITE,steam@cn,DIRECT
   - GEOSITE,category-games@cn,DIRECT
-  - GEOIP,CN,DIRECT,no-resolve
   - GEOIP,PRIVATE,DIRECT,no-resolve
 
   # 阻断 YouTube 的 UDP 协议
@@ -413,4 +456,6 @@ rules:
   - GEOSITE,github,🚀 节点选择
 
   # 兜底
+  - RULE-SET,sukka_china_ip,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT,no-resolve
   - MATCH,🐟 漏网之鱼
