@@ -165,7 +165,7 @@ proxy-groups:
       - "📹 YouTube"
       - "📲 Telegram"
       - "香港🔘"
-      - "台湾🔘"
+      - "中国台湾🔘"
       - "日本🔘"
       - "新加坡🔘"
       - "美国🔘"
@@ -179,7 +179,7 @@ proxy-groups:
       - "美国🔘"
       - "新加坡🔘"
       - "日本🔘"
-      - "台湾🔘"
+      - "中国台湾🔘"
       - "♻️ 自动选择"
       - "手动切换"
 
@@ -251,7 +251,7 @@ proxy-groups:
       - MyAirport
     filter: "(?i)(HK|Hong Kong|香港|HKG)"
 
-  - name: "台湾🔘"
+  - name: "中国台湾🔘"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
     use:
