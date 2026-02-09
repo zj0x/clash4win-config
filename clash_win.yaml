@@ -166,11 +166,11 @@ proxy-groups:
       - "🔍 Google"
       - "📹 YouTube"
       - "📲 Telegram"
-      - "香港Select"
-      - "台湾Select"
-      - "日本Select"
-      - "新加坡Select"
-      - "美国Select"
+      - "香港🔘"
+      - "台湾🔘"
+      - "日本🔘"
+      - "新加坡🔘"
+      - "美国🔘"
       - "DIRECT"
 
   # AI 服务
@@ -178,10 +178,10 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
     proxies:
-      - "美国Select"
-      - "新加坡Select"
-      - "日本Select"
-      - "台湾Select"
+      - "美国🔘"
+      - "新加坡🔘"
+      - "日本🔘"
+      - "台湾🔘"
       - "♻️ 自动选择"
       - "手动切换"
 
@@ -190,10 +190,10 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
     proxies:
-      - "美国Select"
-      - "香港Select"
-      - "新加坡Select"
-      - "日本Select"
+      - "美国🔘"
+      - "香港🔘"
+      - "新加坡🔘"
+      - "日本🔘"
       - "手动切换"
 
   # YouTube
@@ -202,10 +202,10 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
     proxies:
       - "♻️ 自动选择"
-      - "美国Auto"
-      - "香港Auto"
-      - "日本Auto"
-      - "新加坡Auto"
+      - "美国⚡"
+      - "香港⚡"
+      - "日本⚡"
+      - "新加坡⚡"
       - "手动切换"
 
   # Telegram
@@ -213,8 +213,8 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
     proxies:
-      - "新加坡Auto"
-      - "美国Auto"
+      - "新加坡⚡"
+      - "美国⚡"
       - "♻️ 自动选择"
       - "手动切换"
 
@@ -246,35 +246,35 @@ proxy-groups:
       - MyAirport
 
   # 地区手动组
-  - name: "香港Select"
+  - name: "香港🔘"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
       - MyAirport
     filter: "(?i)(HK|Hong Kong|香港|HKG)"
 
-  - name: "台湾Select"
+  - name: "台湾🔘"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
     use:
       - MyAirport
     filter: "(?i)(TW|Taiwan|台湾|TWN)"
 
-  - name: "日本Select"
+  - name: "日本🔘"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
       - MyAirport
     filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
 
-  - name: "新加坡Select"
+  - name: "新加坡🔘"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
       - MyAirport
     filter: "(?i)(SG|Singapore|新加坡|SGP)"
 
-  - name: "美国Select"
+  - name: "美国🔘"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
@@ -282,7 +282,7 @@ proxy-groups:
     filter: "(?i)(United States|美国|USA)"
 
   # 地区自动测速组
-  - name: "香港Auto"
+  - name: "香港⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
@@ -292,7 +292,7 @@ proxy-groups:
     interval: 300
     tolerance: 150
 
-  - name: "日本Auto"
+  - name: "日本⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
@@ -302,7 +302,7 @@ proxy-groups:
     interval: 300
     tolerance: 150
 
-  - name: "新加坡Auto"
+  - name: "新加坡⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
@@ -312,7 +312,7 @@ proxy-groups:
     interval: 300
     tolerance: 150
 
-  - name: "美国Auto"
+  - name: "美国⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
@@ -322,7 +322,7 @@ proxy-groups:
     interval: 300
     tolerance: 150
 
-  - name: "欧洲Auto"
+  - name: "欧洲⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/European_Union.png
     use:
