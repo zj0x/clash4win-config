@@ -44,7 +44,7 @@ tun:
     - any
   auto-route: true
   auto-detect-interface: true
-  mtu: auto
+  mtu: 1500
 
 # ---------------------------------------------------
 # 3. 流量嗅探 (Sniffer)
