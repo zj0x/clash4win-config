@@ -16,7 +16,7 @@ external-controller: 127.0.0.1:9090
 # 2. Mihomo 核心性能参数
 # ---------------------------------------------------
 # 开启 HTTP/3 (QUIC) 支持
-#prefer-h3: true
+prefer-h3: true
 
 # 统一延迟计算
 unified-delay: true
@@ -25,7 +25,7 @@ unified-delay: true
 tcp-concurrent: true
 
 # 保持连接活跃间隔 (秒)
-keep-alive-interval: 15
+keep-alive-interval: 30
 
 # 进程匹配模式
 find-process-mode: strict
@@ -44,7 +44,9 @@ tun:
     - any
   auto-route: true
   auto-detect-interface: true
-  mtu: 1500
+  mtu: 9000
+  strict-route: true           # ← 新增：防止流量泄漏
+  endpoint-independent-nat: true  # ← 新增：改善 NAT 穿透，游戏联机更稳
 
 # ---------------------------------------------------
 # 3. 流量嗅探 (Sniffer)
@@ -59,8 +61,8 @@ sniffer:
       ports: [443, 8443]
     HTTP:
       ports: [80, 8080-8880]
-    #QUIC:
-      #ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
   # 不对以下域名进行嗅探
   skip-domain:
     - "Mijia Cloud"
@@ -95,21 +97,8 @@ dns:
   
   # 默认 DNS
   nameserver:
-    - "https://dns.google/dns-query#h3=true"
-    - "https://1.1.1.1/dns-query#h3=true"
-
-  fallback:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
-    - "tls://8.8.4.4:853"
-
-  fallback-filter:
-    geoip: true
-    geoip-code: CN
-    geosite:
-      - gfw
-    ipcidr:
-      - 240.0.0.0/4
+  - https://doh.pub/dns-query
+  - https://dns.alidns.com/dns-query
   
   # 策略分流 DNS
   nameserver-policy:
@@ -154,8 +143,9 @@ proxy-providers:
     path: ./proxies/airport.yaml
     health-check:
       enable: true
-      interval: 300
-      url: http://www.gstatic.com/generate_204
+      interval: 180
+      url: http://cp.cloudflare.com/generate_204
+      lazy: true
     filter: "(?i)(HK|TW|JP|SG|US|DE|GB|NL|香港|台湾|日本|新加坡|美国|德国|英国|荷兰)"
     override:
       client-fingerprint: chrome
@@ -441,40 +431,40 @@ rule-providers:
 # 8. 规则匹配
 # ---------------------------------------------------
 rules:
-  # 国内直连规则
+  # 1. 最先匹配：LAN 和私有地址（命中率极高）
   - RULE-SET,sukka_lan,DIRECT
+  - GEOIP,PRIVATE,DIRECT,no-resolve
+  - GEOSITE,private,DIRECT
+
+  # 2. 高频拦截
   - RULE-SET,Adobe,REJECT
+  #- AND,((NETWORK,UDP),(GEOSITE,youtube)),REJECT
+
+  # 3. 国内直连（高频命中）
   - RULE-SET,sukka_apple_cn,DIRECT
   - RULE-SET,sukka_microsoft_cn,DIRECT
   - RULE-SET,sukka_download,DIRECT
-  - GEOSITE,cn,DIRECT
-  - GEOSITE,geolocation-cn,DIRECT
-  - GEOSITE,private,DIRECT
   - GEOSITE,steam@cn,DIRECT
   - GEOSITE,category-games@cn,DIRECT
-  - GEOIP,PRIVATE,DIRECT,no-resolve
 
-  # 阻断 YouTube 的 UDP 协议
-  - AND,((NETWORK,UDP),(GEOSITE,youtube)),REJECT
-
-  # 代理规则
+  # 4. 代理规则（按使用频率排列）
   - RULE-SET,GenerativeAI,🤖 AI 服务
   - GEOSITE,openai,🤖 AI 服务
-
-  - RULE-SET,YouTube,📹 YouTube
-  - GEOSITE,youtube,📹 YouTube
-  
-  - RULE-SET,Telegram,📲 Telegram
-  - GEOSITE,telegram,📲 Telegram
-
   - RULE-SET,Google,🔍 Google
   - GEOSITE,google,🔍 Google
-
+  - RULE-SET,YouTube,📹 YouTube
+  - GEOSITE,youtube,📹 YouTube
+  - RULE-SET,Telegram,📲 Telegram
+  - GEOSITE,telegram,📲 Telegram
   - RULE-SET,Scholar,🚀 节点选择
   - RULE-SET,Microsoft,🚀 节点选择
   - GEOSITE,github,🚀 节点选择
 
-  # 兜底
+  # 5. 国内兜底（放在代理规则之后，避免误直连国外流量）
+  - GEOSITE,cn,DIRECT
+  - GEOSITE,geolocation-cn,DIRECT
   - RULE-SET,sukka_china_ip,DIRECT,no-resolve
   - GEOIP,CN,DIRECT,no-resolve
+
+  # 6. 最终兜底
   - MATCH,🐟 漏网之鱼
