@@ -39,7 +39,7 @@ geo-update-interval: 24
 # 开启 TUN 模式
 tun:
   enable: true
-  stack: system # 使用系统协议栈
+  stack: mixed # Recommended for Windows
   dns-hijack:
     - any
   auto-route: true
@@ -71,7 +71,7 @@ sniffer:
 # ---------------------------------------------------
 dns:
   enable: true
-  listen: 0.0.0.0:1053
+  listen: 127.0.0.1:1053
   ipv6: false
   
   # 模式选择
@@ -98,6 +98,19 @@ dns:
     - "https://dns.google/dns-query#h3=true"
     - "https://1.1.1.1/dns-query#h3=true"
 
+  fallback:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+    - "tls://8.8.4.4:853"
+
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    geosite:
+      - gfw
+    ipcidr:
+      - 240.0.0.0/4
+  
   # 策略分流 DNS
   nameserver-policy:
     # 国外域名使用国外 DoH
