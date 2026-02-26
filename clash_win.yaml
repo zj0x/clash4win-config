@@ -1,6 +1,6 @@
 # Clash Verge Rev (Mihomo Kernel) Config
 # 适配 Windows 平台 & 中国大陆网络环境
-# 更新时间：2026-02
+# 更新时间：2026-02（Loyalsoldier 规则集集成 & 白名单模式优化）
 
 # ---------------------------------------------------
 # 1. 基础监听与端口
@@ -25,7 +25,7 @@ unified-delay: true
 tcp-concurrent: true
 
 # 保持连接活跃间隔 (秒)
-keep-alive-interval: 30
+keep-alive-interval: 15
 
 # 进程匹配模式
 find-process-mode: strict
@@ -44,7 +44,7 @@ tun:
     - any
   auto-route: true
   auto-detect-interface: true
-  mtu: 9000
+  mtu: 1500
   strict-route: true           # ← 新增：防止流量泄漏
   endpoint-independent-nat: true  # ← 新增：改善 NAT 穿透，游戏联机更稳
 
@@ -92,8 +92,8 @@ dns:
   
   # 代理节点域名解析服务器
   proxy-server-nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
   
   # 默认 DNS
   nameserver:
@@ -102,11 +102,6 @@ dns:
   
   # 策略分流 DNS
   nameserver-policy:
-    # 国外域名使用国外 DoH
-    "geosite:google,youtube,telegram,openai,github,gfw,geolocation-!cn":
-      - "https://1.1.1.1/dns-query#h3=true"
-      - "https://8.8.8.8/dns-query#h3=true"
-
     # 国内域名使用国内 DNS
     "geosite:cn,geolocation-cn,private,apple,steam@cn,category-games@cn":
       - https://doh.pub/dns-query
@@ -136,6 +131,14 @@ dns:
     - "xbox.*.microsoft.com"       # Xbox
     - "+.xboxlive.com"             # Xbox Live
     - "+.turn.twilio.com"          # Twilio TURN
+    - "dns.msftncsi.com"
+    - "+.logon.battlenet.com.cn"
+    - "+.logon.battle.net"
+    - "lens.l.google.com"
+    - "+.music.163.com"
+    - "captive.apple.com"
+    - "connectivitycheck.gstatic.com"
+    - "detectportal.firefox.com"
 
 # ---------------------------------------------------
 # 5. 代理提供者 (需填写您的订阅)
@@ -440,53 +443,139 @@ rule-providers:
     path: ./ruleset/Microsoft.yaml
     interval: 86400
 
+  loyalsoldier_reject:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
+    path: ./ruleset/loyalsoldier_reject.txt
+    interval: 86400
+
+  loyalsoldier_private:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt"
+    path: ./ruleset/loyalsoldier_private.txt
+    interval: 86400
+
+  loyalsoldier_icloud:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt"
+    path: ./ruleset/loyalsoldier_icloud.txt
+    interval: 86400
+
+  loyalsoldier_apple:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt"
+    path: ./ruleset/loyalsoldier_apple.txt
+    interval: 86400
+
+  loyalsoldier_proxy:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt"
+    path: ./ruleset/loyalsoldier_proxy.txt
+    interval: 86400
+
+  loyalsoldier_direct:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
+    path: ./ruleset/loyalsoldier_direct.txt
+    interval: 86400
+
+  loyalsoldier_gfw:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt"
+    path: ./ruleset/loyalsoldier_gfw.txt
+    interval: 86400
+
+  loyalsoldier_tld_not_cn:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
+    path: ./ruleset/loyalsoldier_tld-not-cn.txt
+    interval: 86400
+
+  loyalsoldier_telegramcidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt"
+    path: ./ruleset/loyalsoldier_telegramcidr.txt
+    interval: 86400
+
+  loyalsoldier_cncidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt"
+    path: ./ruleset/loyalsoldier_cncidr.txt
+    interval: 86400
+
+  loyalsoldier_lancidr:
+    type: http
+    behavior: ipcidr
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt"
+    path: ./ruleset/loyalsoldier_lancidr.txt
+    interval: 86400
+
+  loyalsoldier_applications:
+    type: http
+    behavior: classical
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt"
+    path: ./ruleset/loyalsoldier_applications.txt
+    interval: 86400
+
 # ---------------------------------------------------
 # 8. 规则匹配
 # ---------------------------------------------------
 rules:
-  # 1. 最先匹配：LAN 和私有地址（命中率极高）
+  # ① 需要直连的本地应用（进程匹配，最先）
+  - RULE-SET,loyalsoldier_applications,DIRECT
+
+  # ② 面板直连
+  - DOMAIN,clash.razord.top,DIRECT
+  - DOMAIN,yacd.haishan.me,DIRECT
+  - DOMAIN,d.metacubex.one,DIRECT
+
+  # ③ 私有/局域网
+  - RULE-SET,loyalsoldier_private,DIRECT
   - RULE-SET,sukka_lan,DIRECT
-  - GEOIP,PRIVATE,DIRECT,no-resolve
-  - GEOSITE,private,DIRECT
 
-  # 2. 高频拦截
+  # ④ 广告拦截
+  - RULE-SET,loyalsoldier_reject,REJECT
   - RULE-SET,Adobe,REJECT
-  #- AND,((NETWORK,UDP),(GEOSITE,youtube)),REJECT
 
-  # 3. 国内直连（高频命中）
+  # ⑤ 国内直连（高频命中优先）
+  - RULE-SET,loyalsoldier_icloud,DIRECT
+  - RULE-SET,loyalsoldier_apple,DIRECT
   - RULE-SET,sukka_apple_cn,DIRECT
   - RULE-SET,sukka_microsoft_cn,DIRECT
   - RULE-SET,sukka_download,DIRECT
+  - RULE-SET,loyalsoldier_direct,DIRECT
   - GEOSITE,steam@cn,DIRECT
   - GEOSITE,category-games@cn,DIRECT
 
-  # 4. 代理规则（按使用频率排列）
+  # ⑥ 代理规则（按细粒度到粗粒度）
   - RULE-SET,GenerativeAI,🤖 AI 服务
-  - GEOSITE,openai,🤖 AI 服务
-  - DOMAIN-SUFFIX,github.com,🚀 节点选择
-  - DOMAIN-SUFFIX,github.io,🚀 节点选择
-  - DOMAIN-SUFFIX,githubusercontent.com,🚀 节点选择
-  - DOMAIN-SUFFIX,githubassets.com,🚀 节点选择
-  - DOMAIN-SUFFIX,ghcr.io,🚀 节点选择
-  - DOMAIN-SUFFIX,github.dev,🚀 节点选择
   - RULE-SET,GitHub,🚀 节点选择
-  - GEOSITE,github,🚀 节点选择
   - RULE-SET,Google,🔍 Google
-  - GEOSITE,google,🔍 Google
   - RULE-SET,YouTube,📹 YouTube
-  - GEOSITE,youtube,📹 YouTube
+  - RULE-SET,loyalsoldier_telegramcidr,📲 Telegram
   - RULE-SET,Telegram,📲 Telegram
-  - GEOSITE,telegram,📲 Telegram
   - RULE-SET,Scholar,🚀 节点选择
   - RULE-SET,Microsoft,🚀 节点选择
-  - GEOSITE,gfw,🚀 节点选择
-  - GEOSITE,geolocation-!cn,🚀 节点选择
+  - RULE-SET,loyalsoldier_gfw,🚀 节点选择
+  - RULE-SET,loyalsoldier_tld_not_cn,🚀 节点选择
+  - RULE-SET,loyalsoldier_proxy,🚀 节点选择
 
-  # 5. 国内兜底（放在代理规则之后，避免误直连国外流量）
-  - GEOSITE,cn,DIRECT
-  - GEOSITE,geolocation-cn,DIRECT
+  # ⑦ 国内 IP 兜底
+  - RULE-SET,loyalsoldier_lancidr,DIRECT,no-resolve
+  - RULE-SET,loyalsoldier_cncidr,DIRECT,no-resolve
   - RULE-SET,sukka_china_ip,DIRECT,no-resolve
+  - GEOIP,LAN,DIRECT,no-resolve
   - GEOIP,CN,DIRECT,no-resolve
 
-  # 6. 最终兜底
+  # ⑧ 最终兜底（白名单模式：未命中走代理）
   - MATCH,🐟 漏网之鱼
