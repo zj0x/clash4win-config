@@ -116,8 +116,6 @@ dns:
     - "+.market.xboxcn.com"
     - "+.msftconnecttest.com" # Windows 网络连接探测
     - "+.msftncsi.com"        # Windows 网络连接探测
-    - "msftconnecttest.com"
-    - "msftncsi.com"
     - "+.battlenet.com.cn"    # 暴雪战网国服
     - "+.stun.*.*"            # STUN 穿透
     - "+.stun.*"
@@ -131,7 +129,6 @@ dns:
     - "xbox.*.microsoft.com"       # Xbox
     - "+.xboxlive.com"             # Xbox Live
     - "+.turn.twilio.com"          # Twilio TURN
-    - "dns.msftncsi.com"
     - "+.logon.battlenet.com.cn"
     - "+.logon.battle.net"
     - "lens.l.google.com"
@@ -346,14 +343,6 @@ proxy-groups:
 # 7. 规则提供者
 # ---------------------------------------------------
 rule-providers:
-  sukka_lan:
-    type: http
-    behavior: classical
-    format: text
-    url: https://ruleset.skk.moe/Clash/non_ip/lan.txt
-    path: ./ruleset/sukka_lan.txt
-    interval: 43200
-  
   sukka_apple_cn:
     type: http
     behavior: classical
@@ -378,14 +367,6 @@ rule-providers:
     path: ./ruleset/sukka_download.txt
     interval: 43200
 
-  sukka_china_ip:
-    type: http
-    behavior: ipcidr
-    format: text
-    url: https://ruleset.skk.moe/Clash/ip/china_ip.txt
-    path: ./ruleset/sukka_china_ip.txt
-    interval: 43200
-  
   Google:
     type: http
     behavior: classical
@@ -457,13 +438,6 @@ rule-providers:
     path: ./ruleset/loyalsoldier_private.txt
     interval: 86400
 
-  loyalsoldier_icloud:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt"
-    path: ./ruleset/loyalsoldier_icloud.txt
-    interval: 86400
-
   loyalsoldier_apple:
     type: http
     behavior: domain
@@ -483,41 +457,6 @@ rule-providers:
     behavior: domain
     url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
     path: ./ruleset/loyalsoldier_direct.txt
-    interval: 86400
-
-  loyalsoldier_gfw:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt"
-    path: ./ruleset/loyalsoldier_gfw.txt
-    interval: 86400
-
-  loyalsoldier_tld_not_cn:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt"
-    path: ./ruleset/loyalsoldier_tld-not-cn.txt
-    interval: 86400
-
-  loyalsoldier_telegramcidr:
-    type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt"
-    path: ./ruleset/loyalsoldier_telegramcidr.txt
-    interval: 86400
-
-  loyalsoldier_cncidr:
-    type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt"
-    path: ./ruleset/loyalsoldier_cncidr.txt
-    interval: 86400
-
-  loyalsoldier_lancidr:
-    type: http
-    behavior: ipcidr
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt"
-    path: ./ruleset/loyalsoldier_lancidr.txt
     interval: 86400
 
   loyalsoldier_applications:
@@ -541,14 +480,12 @@ rules:
 
   # ③ 私有/局域网
   - RULE-SET,loyalsoldier_private,DIRECT
-  - RULE-SET,sukka_lan,DIRECT
 
   # ④ 广告拦截
   - RULE-SET,loyalsoldier_reject,REJECT
   - RULE-SET,Adobe,REJECT
 
   # ⑤ 国内直连（高频命中优先）
-  - RULE-SET,loyalsoldier_icloud,DIRECT
   - RULE-SET,loyalsoldier_apple,DIRECT
   - RULE-SET,sukka_apple_cn,DIRECT
   - RULE-SET,sukka_microsoft_cn,DIRECT
@@ -562,18 +499,12 @@ rules:
   - RULE-SET,GitHub,🚀 节点选择
   - RULE-SET,Google,🔍 Google
   - RULE-SET,YouTube,📹 YouTube
-  - RULE-SET,loyalsoldier_telegramcidr,📲 Telegram
   - RULE-SET,Telegram,📲 Telegram
   - RULE-SET,Scholar,🚀 节点选择
   - RULE-SET,Microsoft,🚀 节点选择
-  - RULE-SET,loyalsoldier_gfw,🚀 节点选择
-  - RULE-SET,loyalsoldier_tld_not_cn,🚀 节点选择
   - RULE-SET,loyalsoldier_proxy,🚀 节点选择
 
   # ⑦ 国内 IP 兜底
-  - RULE-SET,loyalsoldier_lancidr,DIRECT,no-resolve
-  - RULE-SET,loyalsoldier_cncidr,DIRECT,no-resolve
-  - RULE-SET,sukka_china_ip,DIRECT,no-resolve
   - GEOIP,LAN,DIRECT,no-resolve
   - GEOIP,CN,DIRECT,no-resolve
 
