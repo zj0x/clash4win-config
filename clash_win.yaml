@@ -25,7 +25,7 @@ unified-delay: true
 tcp-concurrent: true
 
 # 保持连接活跃间隔 (秒)
-keep-alive-interval: 15
+keep-alive-interval: 30
 
 # 进程匹配模式
 find-process-mode: strict
