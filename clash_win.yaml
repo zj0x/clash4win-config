@@ -93,22 +93,22 @@ dns:
     - 223.5.5.5                     # 阿里 DNS
     - 119.29.29.29                  # 腾讯 DNSPod
 
-  # 代理节点域名解析（走国内 DoH，确保节点域名正常解析）
+  # 代理节点域名解析（走国内 UDP DNS，低延迟）
   proxy-server-nameserver:
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
 
   # 主 DNS（未命中 nameserver-policy 的域名使用）
   nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
 
-  # 域名策略 DNS — 仅配置国内域名 → 国内 DNS
+  # 域名策略 DNS — 仅配置国内域名 → 国内 UDP DNS（低延迟）
   # 被墙域名无需配置：fake-ip 直接返回假 IP，由代理远端解析
   nameserver-policy:
     "geosite:cn,geolocation-cn,private,apple-cn,apple@cn,steam@cn,category-games@cn":
-      - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
+      - 223.5.5.5
+      - 119.29.29.29
 
   # Fake-IP 过滤（以下域名返回真实 IP，不走 fake-ip）
   # 解决：Windows "无网络"图标、STUN 穿透、游戏联机、NTP 等问题
