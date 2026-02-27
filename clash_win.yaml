@@ -463,6 +463,17 @@ rules:
 
   # ─⑥ 代理服务（细粒度 → 粗粒度）─
   - RULE-SET,ai_service,🧠 AI 服务
+  # OpenAI / ChatGPT（GEOSITE 兜底 + 显式域名，防 rule-set 下载失败）
+  - GEOSITE,openai,🧠 AI 服务
+  - DOMAIN-SUFFIX,chatgpt.com,🧠 AI 服务
+  - DOMAIN-SUFFIX,oaistatic.com,🧠 AI 服务
+  - DOMAIN-SUFFIX,oaiusercontent.com,🧠 AI 服务
+  # Reddit
+  - GEOSITE,reddit,🚀 节点选择
+  - DOMAIN-SUFFIX,reddit.com,🚀 节点选择
+  - DOMAIN-SUFFIX,redd.it,🚀 节点选择
+  - DOMAIN-SUFFIX,redditmedia.com,🚀 节点选择
+  - DOMAIN-SUFFIX,redditstatic.com,🚀 节点选择
   - GEOSITE,youtube,📹 YouTube
   - GEOSITE,google,🔍 Google
   - GEOSITE,telegram,📲 Telegram
