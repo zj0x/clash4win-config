@@ -1,56 +1,57 @@
-# Clash Verge Rev (Mihomo Kernel) Config
-# 适配 Windows 平台 & 中国大陆网络环境
-# 更新时间：2026-02（Loyalsoldier 规则集集成 & 白名单模式优化）
+# ============================================================
+# Clash Verge Rev 配置 (Mihomo 内核)
+# 适配：Windows | 地区：中国大陆 | 模式：白名单
+# 白名单逻辑：已知国内域名/IP → 直连，其余 → 代理（安全优先）
+# 更新：2026-02-27
+# ============================================================
 
-# ---------------------------------------------------
-# 1. 基础监听与端口
-# ---------------------------------------------------
-mixed-port: 7890
-allow-lan: true
-mode: rule
-log-level: info
-ipv6: false
-external-controller: 127.0.0.1:9090
+# ─── 基础设置 ───────────────────────────────────────────────
+mixed-port: 7890                    # HTTP + SOCKS5 混合端口
+allow-lan: true                     # 允许局域网设备连接
+bind-address: "*"                   # 监听所有网卡
+mode: rule                          # 规则模式
+log-level: info                     # 日志级别
+ipv6: false                         # 关闭 IPv6（国内 IPv6 环境复杂，易泄漏）
+external-controller: 127.0.0.1:9090 # 面板控制端口
 
-# ---------------------------------------------------
-# 2. Mihomo 核心性能参数
-# ---------------------------------------------------
-# 开启 HTTP/3 (QUIC) 支持
-prefer-h3: true
+# ─── 内核性能优化 ───────────────────────────────────────────
+unified-delay: true                 # 统一延迟计算，结果更准确
+tcp-concurrent: true                # TCP 并发连接，自动选最快
+keep-alive-interval: 30             # 保活间隔(秒)，防 NAT 超时断连
+find-process-mode: strict           # 精确进程匹配
+global-client-fingerprint: chrome   # TLS 指纹伪装为 Chrome，降低特征检测风险
 
-# 统一延迟计算
-unified-delay: true
+# ─── GeoData 配置 ──────────────────────────────────────────
+geodata-mode: true                  # 使用 .dat 格式（v2ray 兼容，更全）
+geodata-loader: standard            # standard 加载更快（内存充足时推荐）
+geo-auto-update: true               # 自动更新 GeoData
+geo-update-interval: 24             # 更新间隔(小时)
 
-# TCP 并发连接
-tcp-concurrent: true
+# GeoData 下载源（使用 jsdelivr CDN，国内访问快）
+geox-url:
+  geoip: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip-lite.dat"
+  geosite: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
+  mmdb: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country-lite.mmdb"
 
-# 保持连接活跃间隔 (秒)
-keep-alive-interval: 30
+# ─── 持久化 ────────────────────────────────────────────────
+profile:
+  store-selected: true              # 记住策略组手动选择
+  store-fake-ip: true               # 缓存 Fake-IP 映射，重启不丢失
 
-# 进程匹配模式
-find-process-mode: strict
-
-# GeoData 模式
-geodata-mode: true
-geodata-loader: standard
-geo-auto-update: true
-geo-update-interval: 24
-
-# 开启 TUN 模式
+# ─── TUN 虚拟网卡（接管全部系统流量）─────────────────────────
 tun:
   enable: true
-  stack: mixed # Recommended for Windows
+  stack: mixed                      # gVisor + System 混合栈，Windows 推荐
   dns-hijack:
-    - any
+    - "any:53"                      # 劫持所有 DNS，防止泄漏
   auto-route: true
   auto-detect-interface: true
   mtu: 1500
-  strict-route: true           # ← 新增：防止流量泄漏
-  endpoint-independent-nat: true  # ← 新增：改善 NAT 穿透，游戏联机更稳
+  strict-route: true                # 严格路由，防流量绕过 TUN
+  endpoint-independent-nat: true    # 改善 NAT 穿透（游戏、语音）
 
-# ---------------------------------------------------
-# 3. 流量嗅探 (Sniffer)
-# ---------------------------------------------------
+# ─── 流量嗅探 ──────────────────────────────────────────────
+# 嗅探 TLS/HTTP/QUIC 中的域名，辅助分流（解决纯 IP 连接分流失败）
 sniffer:
   enable: true
   force-dns-mapping: true
@@ -63,402 +64,369 @@ sniffer:
       ports: [80, 8080-8880]
     QUIC:
       ports: [443, 8443]
-  # 不对以下域名进行嗅探
   skip-domain:
     - "Mijia Cloud"
     - "+.push.apple.com"
 
-# ---------------------------------------------------
-# 4. DNS 配置
-# ---------------------------------------------------
+# ─── DNS 配置（核心防污染）─────────────────────────────────
+# 策略：fake-ip + respect-rules
+#   • 国内域名 → 国内 DoH 解析 → 直连
+#   • 被墙域名 → 返回 fake-ip → 由代理远端解析（零 DNS 泄漏）
+#   • 无需配置海外 DNS：fake-ip 模式下被墙域名根本不走本地 DNS
 dns:
   enable: true
   listen: 127.0.0.1:1053
   ipv6: false
-  
-  # 模式选择
+
+  # 模式
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
-  
-  # 缓存与性能
-  cache-algorithm: arc
-  use-hosts: true             # 读取系统 hosts 文件
-  respect-rules: true         # 遵循规则中的 DNS 设置
-  
-  # 基础 DNS (用于解析 DoH 域名)
+
+  # 性能
+  cache-algorithm: arc              # ARC 缓存，命中率优于 LRU
+  use-hosts: true
+  use-system-hosts: true
+  respect-rules: true               # DNS 解析遵循分流规则
+
+  # 引导 DNS（纯 IP，解析 DoH 域名本身，打破鸡生蛋问题）
   default-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
-  
-  # 代理节点域名解析服务器
+    - 223.5.5.5                     # 阿里 DNS
+    - 119.29.29.29                  # 腾讯 DNSPod
+
+  # 代理节点域名解析（走国内 DoH，确保节点域名正常解析）
   proxy-server-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
-  
-  # 默认 DNS
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+  # 主 DNS（未命中 nameserver-policy 的域名使用）
   nameserver:
-  - https://doh.pub/dns-query
-  - https://dns.alidns.com/dns-query
-  
-  # 策略分流 DNS
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+
+  # 域名策略 DNS — 仅配置国内域名 → 国内 DNS
+  # 被墙域名无需配置：fake-ip 直接返回假 IP，由代理远端解析
   nameserver-policy:
-    # 国内域名使用国内 DNS
-    "geosite:cn,geolocation-cn,private,apple,steam@cn,category-games@cn":
+    "geosite:cn,geolocation-cn,private,apple-cn,apple@cn,steam@cn,category-games@cn":
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
 
-  # 🔴 Fake-IP 过滤 (Windows 稳定性救星)
-  # 以下域名不返回假 IP，而是返回真实 IP。
-  # 解决 Windows 网络探测显示“无网络”、STUN 穿透失败、游戏联机失败等问题
+  # Fake-IP 过滤（以下域名返回真实 IP，不走 fake-ip）
+  # 解决：Windows "无网络"图标、STUN 穿透、游戏联机、NTP 等问题
   fake-ip-filter:
+    # Windows 网络探测
+    - "+.msftconnecttest.com"
+    - "+.msftncsi.com"
+    - "dns.msftncsi.com"
+    # NTP 时间同步
+    - "+.ntp.org.cn"
+    - "+.pool.ntp.org"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.*.edu.cn"
+    - "time.*.apple.com"
+    - "ntp.*.com"
+    # 局域网 / 本地
     - "+.lan"
     - "+.local"
-    - "+.market.xboxcn.com"
-    - "+.msftconnecttest.com" # Windows 网络连接探测
-    - "+.msftncsi.com"        # Windows 网络连接探测
-    - "+.battlenet.com.cn"    # 暴雪战网国服
-    - "+.stun.*.*"            # STUN 穿透
+    - "+.localhost"
+    # STUN / NAT 穿透 / WebRTC
+    - "+.stun.*.*"
     - "+.stun.*"
     - "stun.*.*"
     - "stun.*"
-    - "+.ntp.org.cn"          # NTP 时间同步
-    - "+.pool.ntp.org"
-    - "localhost.ptlogin2.qq.com"  # QQ 登录
-    - "+.srv.nintendo.net"         # Nintendo
-    - "+.stun.playstation.net"     # PlayStation
-    - "xbox.*.microsoft.com"       # Xbox
-    - "+.xboxlive.com"             # Xbox Live
-    - "+.turn.twilio.com"          # Twilio TURN
+    - "+.turn.twilio.com"
+    # QQ 登录
+    - "localhost.ptlogin2.qq.com"
+    - "localhost.sec.qq.com"
+    # 网易云音乐（需要真实 IP 才能正常播放）
+    - "+.music.163.com"
+    - "music.126.net"
+    # 游戏平台
+    - "+.battlenet.com.cn"
     - "+.logon.battlenet.com.cn"
     - "+.logon.battle.net"
-    - "lens.l.google.com"
-    - "+.music.163.com"
+    - "+.srv.nintendo.net"
+    - "+.stun.playstation.net"
+    - "xbox.*.microsoft.com"
+    - "+.xboxlive.com"
+    - "+.market.xboxcn.com"
+    # 网络门户检测
     - "captive.apple.com"
     - "connectivitycheck.gstatic.com"
     - "detectportal.firefox.com"
+    - "resolver1.opendns.com"
+    - "wifi.vivo.com.cn"
+    # Google Lens
+    - "lens.l.google.com"
 
-# ---------------------------------------------------
-# 5. 代理提供者 (需填写您的订阅)
-# ---------------------------------------------------
+# ─── 代理提供者 ────────────────────────────────────────────
+# 🔴 请将 url 替换为你的机场订阅链接
 proxy-providers:
   MyAirport:
     type: http
-    # 🔴 请在下方引号内填入你的机场订阅链接
     url: "https://example.com/api/v1/client/subscribe?token=YOUR_TOKEN"
     interval: 3600
     path: ./proxies/airport.yaml
+    # 过滤信息节点（取消注释按需启用）
+    # exclude-filter: "(?i)(到期|剩余|流量|官网|套餐|重置)"
     health-check:
       enable: true
-      interval: 180
+      interval: 300
       url: http://cp.cloudflare.com/generate_204
       lazy: true
-    filter: "(?i)(HK|TW|JP|SG|US|DE|GB|NL|香港|台湾|日本|新加坡|美国|德国|英国|荷兰)"
     override:
       client-fingerprint: chrome
       skip-cert-verify: true
       udp: true
 
-# ---------------------------------------------------
-# 6. 策略组
-# ---------------------------------------------------
+# ─── 策略组 ────────────────────────────────────────────────
 proxy-groups:
-  # 主面板
+
+  # ── 核心策略 ──
+
   - name: "🚀 节点选择"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
     proxies:
-      - "♻️ 自动选择"
-      - "手动切换"
-      - "🤖 AI 服务"
-      - "🔍 Google"
-      - "📹 YouTube"
-      - "📲 Telegram"
-      - "香港🔘"
-      - "中国台湾🔘"
-      - "日本🔘"
-      - "新加坡🔘"
-      - "美国🔘"
+      - "⚡ 自动选择"
+      - "🔧 手动切换"
+      - "香港"
+      - "台湾"
+      - "日本"
+      - "新加坡"
+      - "美国"
       - "DIRECT"
 
-  # AI 服务
-  - name: "🤖 AI 服务"
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
-    proxies:
-      - "美国🔘"
-      - "新加坡🔘"
-      - "日本🔘"
-      - "中国台湾🔘"
-      - "♻️ 自动选择"
-      - "手动切换"
-
-  # Google 搜索
-  - name: "🔍 Google"
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
-    proxies:
-      - "美国🔘"
-      - "香港🔘"
-      - "新加坡🔘"
-      - "日本🔘"
-      - "手动切换"
-
-  # YouTube
-  - name: "📹 YouTube"
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
-    proxies:
-      - "♻️ 自动选择"
-      - "美国⚡"
-      - "香港⚡"
-      - "日本⚡"
-      - "新加坡⚡"
-      - "手动切换"
-
-  # Telegram
-  - name: "📲 Telegram"
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
-    proxies:
-      - "新加坡⚡"
-      - "美国⚡"
-      - "♻️ 自动选择"
-      - "手动切换"
-
-  # 兜底
-  - name: "🐟 漏网之鱼"
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
-    proxies:
-      - "🚀 节点选择"
-      - "♻️ 自动选择"
-      - "手动切换"
-      - "DIRECT"
-
-  # 全局自动测速
-  - name: "♻️ 自动选择"
+  - name: "⚡ 自动选择"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
     use:
       - MyAirport
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 150
+    tolerance: 80
+    lazy: true
 
-  # 手动切换
-  - name: "手动切换"
+  # ── 专用策略 ──
+
+  # AI 服务（ChatGPT / Claude / Gemini / Copilot 等）
+  # 注意：OpenAI 封禁香港 IP，Claude 部分地区不可用，建议美国/日本/新加坡
+  - name: "🧠 AI 服务"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
+    proxies:
+      - "美国"
+      - "日本"
+      - "新加坡"
+      - "台湾"
+      - "⚡ 自动选择"
+      - "🔧 手动切换"
+
+  - name: "🔍 Google"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+    proxies:
+      - "🚀 节点选择"
+      - "香港"
+      - "美国"
+      - "日本"
+      - "新加坡"
+      - "🔧 手动切换"
+
+  - name: "📹 YouTube"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+    proxies:
+      - "🚀 节点选择"
+      - "香港"
+      - "日本"
+      - "新加坡"
+      - "美国"
+      - "🔧 手动切换"
+
+  - name: "📲 Telegram"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+    proxies:
+      - "🚀 节点选择"
+      - "新加坡"
+      - "美国"
+      - "香港"
+      - "日本"
+      - "🔧 手动切换"
+
+  # 兜底：未匹配流量（白名单模式 → 走代理）
+  - name: "🐟 漏网之鱼"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
+    proxies:
+      - "🚀 节点选择"
+      - "⚡ 自动选择"
+      - "DIRECT"
+
+  # ── 工具组 ──
+
+  - name: "🔧 手动切换"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png
     use:
       - MyAirport
 
-  # 地区手动组
-  - name: "香港🔘"
+  # ── 地区组（手动选择，默认自动测速最快节点）──
+
+  - name: "香港"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+    proxies:
+      - "香港⚡"
     use:
       - MyAirport
-    filter: "(?i)(HK|Hong Kong|香港|HKG)"
+    filter: "(?i)(HK|Hong Kong|香港|HKG|🇭🇰)"
 
-  - name: "中国台湾🔘"
+  - name: "台湾"
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    proxies:
+      - "台湾⚡"
     use:
       - MyAirport
-    filter: "(?i)(TW|Taiwan|台湾|TWN)"
+    filter: "(?i)(TW|Taiwan|台湾|TWN|🇹🇼)"
 
-  - name: "日本🔘"
+  - name: "日本"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+    proxies:
+      - "日本⚡"
     use:
       - MyAirport
-    filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
+    filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka|🇯🇵)"
 
-  - name: "新加坡🔘"
+  - name: "新加坡"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+    proxies:
+      - "新加坡⚡"
     use:
       - MyAirport
-    filter: "(?i)(SG|Singapore|新加坡|SGP)"
+    filter: "(?i)(SG|Singapore|新加坡|SGP|🇸🇬)"
 
-  - name: "美国🔘"
+  - name: "美国"
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+    proxies:
+      - "美国⚡"
     use:
       - MyAirport
-    filter: "(?i)(United States|美国|USA)"
+    filter: "(?i)(US|United States|美国|USA|🇺🇸)"
 
-  # 地区自动测速组
+  # ── 地区自动测速（内部组，被上方地区组引用）──
+
   - name: "香港⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
       - MyAirport
-    filter: "(?i)(HK|Hong Kong|香港|HKG)"
+    filter: "(?i)(HK|Hong Kong|香港|HKG|🇭🇰)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 150
+    tolerance: 80
+    lazy: true
+
+  - name: "台湾⚡"
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    use:
+      - MyAirport
+    filter: "(?i)(TW|Taiwan|台湾|TWN|🇹🇼)"
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+    tolerance: 80
+    lazy: true
 
   - name: "日本⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
       - MyAirport
-    filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka)"
+    filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka|🇯🇵)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 150
+    tolerance: 80
+    lazy: true
 
   - name: "新加坡⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
       - MyAirport
-    filter: "(?i)(SG|Singapore|新加坡|SGP)"
+    filter: "(?i)(SG|Singapore|新加坡|SGP|🇸🇬)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 150
+    tolerance: 80
+    lazy: true
 
   - name: "美国⚡"
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
       - MyAirport
-    filter: "(?i)(United States|美国|USA)"
+    filter: "(?i)(US|United States|美国|USA|🇺🇸)"
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-    tolerance: 150
+    tolerance: 80
+    lazy: true
 
-  - name: "欧洲⚡"
-    type: url-test
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/European_Union.png
-    use:
-      - MyAirport
-    filter: "(?i)(DE|Germany|德国|GB|UK|United Kingdom|英国|NL|Netherlands|荷兰)"
-    url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    tolerance: 150
-
-# ---------------------------------------------------
-# 7. 规则提供者
-# ---------------------------------------------------
+# ─── 规则提供者 ────────────────────────────────────────────
+# 仅保留 GEOSITE 无法覆盖的特殊规则集，其余全部用内置 GEOSITE 替代
+# 优势：减少启动下载数、加快匹配速度、降低维护成本
 rule-providers:
-  sukka_apple_cn:
-    type: http
-    behavior: classical
-    format: text
-    url: https://ruleset.skk.moe/Clash/non_ip/apple_cn.txt
-    path: ./ruleset/sukka_apple_cn.txt
-    interval: 43200
 
-  sukka_microsoft_cn:
-    type: http
-    behavior: classical
-    format: text
-    url: https://ruleset.skk.moe/Clash/non_ip/microsoft_cdn.txt
-    path: ./ruleset/sukka_microsoft_cn.txt
-    interval: 43200
-
-  sukka_download:
-    type: http
-    behavior: domain # 纯域名匹配，效率极高
-    format: text
-    url: https://ruleset.skk.moe/Clash/domainset/download.txt
-    path: ./ruleset/sukka_download.txt
-    interval: 43200
-
-  Google:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml"
-    path: ./ruleset/Google.yaml
-    interval: 86400
-
-  YouTube:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
-    path: ./ruleset/YouTube.yaml
-    interval: 86400
-
-  Telegram:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
-    path: ./ruleset/Telegram.yaml
-    interval: 86400
-
-  GenerativeAI:
+  # AI 服务（覆盖 OpenAI / Claude / Gemini / Copilot / Perplexity 等）
+  # GEOSITE 的 openai 分类不够全面，使用第三方维护的综合列表
+  ai_service:
     type: http
     behavior: classical
     format: text
     url: "https://raw.githubusercontent.com/EAlyce/conf/refs/heads/main/Rule/OpenAI.list"
-    path: ./ruleset/EAlyce_AI.list
+    path: ./ruleset/ai_service.list
     interval: 86400
 
-  Scholar:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Scholar/Scholar.yaml"
-    path: ./ruleset/Scholar.yaml
-    interval: 86400
-
-  GitHub:
-    type: http
-    behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml"
-    path: ./ruleset/GitHub.yaml
-    interval: 86400
- 
-  Adobe:
+  # Adobe 正版验证屏蔽
+  adobe_block:
     type: http
     behavior: classical
     url: "https://raw.githubusercontent.com/ignaciocastro/a-dove-is-dumb/refs/heads/main/clash.yaml"
-    path: ./ruleset/adobe.yaml
+    path: ./ruleset/adobe_block.yaml
     interval: 86400
-    
-  Microsoft:
+
+  # Apple 国内 CDN（确保 Apple 中国服务走最快的国内节点）
+  sukka_apple_cn:
     type: http
     behavior: classical
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml"
-    path: ./ruleset/Microsoft.yaml
-    interval: 86400
+    format: text
+    url: "https://ruleset.skk.moe/Clash/non_ip/apple_cn.txt"
+    path: ./ruleset/sukka_apple_cn.txt
+    interval: 43200
 
-  loyalsoldier_reject:
+  # Microsoft 国内 CDN
+  sukka_microsoft_cdn:
+    type: http
+    behavior: classical
+    format: text
+    url: "https://ruleset.skk.moe/Clash/non_ip/microsoft_cdn.txt"
+    path: ./ruleset/sukka_microsoft_cdn.txt
+    interval: 43200
+
+  # 大文件下载直连（Windows Update、驱动、IDE 等）
+  sukka_download:
     type: http
     behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
-    path: ./ruleset/loyalsoldier_reject.txt
-    interval: 86400
+    format: text
+    url: "https://ruleset.skk.moe/Clash/domainset/download.txt"
+    path: ./ruleset/sukka_download.txt
+    interval: 43200
 
-  loyalsoldier_private:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt"
-    path: ./ruleset/loyalsoldier_private.txt
-    interval: 86400
-
-  loyalsoldier_apple:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt"
-    path: ./ruleset/loyalsoldier_apple.txt
-    interval: 86400
-
-  loyalsoldier_proxy:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt"
-    path: ./ruleset/loyalsoldier_proxy.txt
-    interval: 86400
-
-  loyalsoldier_direct:
-    type: http
-    behavior: domain
-    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt"
-    path: ./ruleset/loyalsoldier_direct.txt
-    interval: 86400
-
+  # 本地应用进程直连
   loyalsoldier_applications:
     type: http
     behavior: classical
@@ -466,47 +434,53 @@ rule-providers:
     path: ./ruleset/loyalsoldier_applications.txt
     interval: 86400
 
-# ---------------------------------------------------
-# 8. 规则匹配
-# ---------------------------------------------------
+# ─── 分流规则 ──────────────────────────────────────────────
+# 匹配顺序：上→下，首次命中即停止
+# 设计原则：进程 → 特殊直连 → 屏蔽 → 国内CDN → 代理服务 → GFW兜底
+#           → Apple/Microsoft直连 → 国内域名 → 国内IP → 白名单兜底
 rules:
-  # ① 需要直连的本地应用（进程匹配，最先）
+  # ─① 本地应用直连（进程级，最先处理）─
   - RULE-SET,loyalsoldier_applications,DIRECT
 
-  # ② 面板直连
+  # ─② Dashboard 面板直连 ─
   - DOMAIN,clash.razord.top,DIRECT
   - DOMAIN,yacd.haishan.me,DIRECT
   - DOMAIN,d.metacubex.one,DIRECT
 
-  # ③ 私有/局域网
-  - RULE-SET,loyalsoldier_private,DIRECT
+  # ─③ 私有网络 / 局域网 ─
+  - GEOSITE,private,DIRECT
+  - GEOIP,private,DIRECT,no-resolve
 
-  # ④ 广告拦截
-  - RULE-SET,loyalsoldier_reject,REJECT
-  - RULE-SET,Adobe,REJECT
+  # ─④ 屏蔽 ─
+  - RULE-SET,adobe_block,REJECT
 
-  # ⑤ 国内直连（高频命中优先）
-  - RULE-SET,loyalsoldier_apple,DIRECT
+  # ─⑤ 国内 CDN / 下载加速（范围精确，安全前置）─
   - RULE-SET,sukka_apple_cn,DIRECT
-  - RULE-SET,sukka_microsoft_cn,DIRECT
+  - RULE-SET,sukka_microsoft_cdn,DIRECT
   - RULE-SET,sukka_download,DIRECT
-  - RULE-SET,loyalsoldier_direct,DIRECT
   - GEOSITE,steam@cn,DIRECT
   - GEOSITE,category-games@cn,DIRECT
 
-  # ⑥ 代理规则（按细粒度到粗粒度）
-  - RULE-SET,GenerativeAI,🤖 AI 服务
-  - RULE-SET,GitHub,🚀 节点选择
-  - RULE-SET,Google,🔍 Google
-  - RULE-SET,YouTube,📹 YouTube
-  - RULE-SET,Telegram,📲 Telegram
-  - RULE-SET,Scholar,🚀 节点选择
-  - RULE-SET,Microsoft,🚀 节点选择
-  - RULE-SET,loyalsoldier_proxy,🚀 节点选择
+  # ─⑥ 代理服务（细粒度 → 粗粒度）─
+  - RULE-SET,ai_service,🧠 AI 服务
+  - GEOSITE,youtube,📹 YouTube
+  - GEOSITE,google,🔍 Google
+  - GEOSITE,telegram,📲 Telegram
+  - GEOSITE,github,🚀 节点选择
+  - GEOSITE,twitter,🚀 节点选择
+  - GEOSITE,category-scholar-!cn,🚀 节点选择
 
-  # ⑦ 国内 IP 兜底
-  - GEOIP,LAN,DIRECT,no-resolve
+  # ─⑦ Apple & Microsoft 全球服务直连 ─
+  # 中国可正常访问，默认直连；如需代理请使用 advanced 配置
+  - GEOSITE,apple,DIRECT
+  - GEOSITE,microsoft,DIRECT
+
+  # ─⑧ GFW 域名兜底 ─
+  - GEOSITE,gfw,🚀 节点选择
+
+  # ─⑨ 国内域名 & IP 兜底 ─
+  - GEOSITE,cn,DIRECT
   - GEOIP,CN,DIRECT,no-resolve
 
-  # ⑧ 最终兜底（白名单模式：未命中走代理）
+  # ─⑩ 最终兜底（白名单模式：未知流量 → 代理，确保安全）─
   - MATCH,🐟 漏网之鱼
