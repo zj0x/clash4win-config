@@ -19,7 +19,7 @@ unified-delay: true                 # 统一延迟计算，结果更准确
 tcp-concurrent: true                # TCP 并发连接，自动选最快
 keep-alive-interval: 15             # 保活间隔(秒)，防 NAT 超时断连
 find-process-mode: strict           # 精确进程匹配
-global-client-fingerprint: chrome   # TLS 指纹伪装为 Chrome，降低特征检测风险
+#global-client-fingerprint: chrome   # TLS 指纹伪装为 Chrome，降低特征检测风险
 
 # ─── GeoData 配置 ──────────────────────────────────────────
 geodata-mode: true                  # 使用 .dat 格式（v2ray 兼容，更全）
