@@ -17,13 +17,13 @@ external-controller: 127.0.0.1:9090 # 面板控制端口
 # ─── 内核性能优化 ───────────────────────────────────────────
 unified-delay: true                 # 统一延迟计算，结果更准确
 tcp-concurrent: true                # TCP 并发连接，自动选最快
-keep-alive-interval: 30             # 保活间隔(秒)，防 NAT 超时断连
+keep-alive-interval: 15             # 保活间隔(秒)，防 NAT 超时断连
 find-process-mode: strict           # 精确进程匹配
 global-client-fingerprint: chrome   # TLS 指纹伪装为 Chrome，降低特征检测风险
 
 # ─── GeoData 配置 ──────────────────────────────────────────
 geodata-mode: true                  # 使用 .dat 格式（v2ray 兼容，更全）
-geodata-loader: standard            # standard 加载更快（内存充足时推荐）
+geodata-loader: memcache            # memcache 引擎加载到内存，匹配速度提升数量级
 geo-auto-update: true               # 自动更新 GeoData
 geo-update-interval: 24             # 更新间隔(小时)
 
@@ -41,7 +41,7 @@ profile:
 # ─── TUN 虚拟网卡（接管全部系统流量）─────────────────────────
 tun:
   enable: true
-  stack: mixed                      # gVisor + System 混合栈，Windows 推荐
+  stack: system                     # system 纯净栈，Windows 下性能远强于 mixed 和 gVisor
   dns-hijack:
     - "any:53"                      # 劫持所有 DNS，防止泄漏
   auto-route: true
@@ -107,7 +107,7 @@ dns:
   # 域名策略 DNS — 仅配置国内域名 → 国内 UDP DNS（低延迟）
   # 被墙域名无需配置：fake-ip 直接返回假 IP，由代理远端解析
   nameserver-policy:
-    "geosite:cn,geolocation-cn,private,apple-cn,apple@cn,steam@cn,category-games@cn":
+    "geosite:cn,private,apple-cn,apple@cn,steam@cn,category-games@cn":
       - 223.5.5.5
       - 119.29.29.29
 
@@ -172,7 +172,7 @@ proxy-providers:
     # exclude-filter: "(?i)(到期|剩余|流量|官网|套餐|重置)"
     health-check:
       enable: true
-      interval: 300
+      interval: 600
       url: http://cp.cloudflare.com/generate_204
       lazy: true
     override:
@@ -204,8 +204,8 @@ proxy-groups:
     use:
       - MyAirport
     url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    tolerance: 80
+    interval: 600
+    tolerance: 50
     lazy: true
 
   # ── 专用策略 ──
@@ -329,8 +329,8 @@ proxy-groups:
       - MyAirport
     filter: "(?i)(HK|Hong Kong|香港|HKG|🇭🇰)"
     url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    tolerance: 80
+    interval: 600
+    tolerance: 50
     lazy: true
 
   - name: "台湾⚡"
@@ -340,8 +340,8 @@ proxy-groups:
       - MyAirport
     filter: "(?i)(TW|Taiwan|台湾|TWN|🇹🇼)"
     url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    tolerance: 80
+    interval: 600
+    tolerance: 50
     lazy: true
 
   - name: "日本⚡"
@@ -351,8 +351,8 @@ proxy-groups:
       - MyAirport
     filter: "(?i)(JP|Japan|日本|JPN|Tokyo|Osaka|🇯🇵)"
     url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    tolerance: 80
+    interval: 600
+    tolerance: 50
     lazy: true
 
   - name: "新加坡⚡"
@@ -362,8 +362,8 @@ proxy-groups:
       - MyAirport
     filter: "(?i)(SG|Singapore|新加坡|SGP|🇸🇬)"
     url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    tolerance: 80
+    interval: 600
+    tolerance: 50
     lazy: true
 
   - name: "美国⚡"
@@ -373,8 +373,8 @@ proxy-groups:
       - MyAirport
     filter: "(?i)(US|United States|美国|USA|🇺🇸)"
     url: "http://www.gstatic.com/generate_204"
-    interval: 300
-    tolerance: 80
+    interval: 600
+    tolerance: 50
     lazy: true
 
 # ─── 规则提供者 ────────────────────────────────────────────
@@ -431,6 +431,7 @@ rule-providers:
   loyalsoldier_applications:
     type: http
     behavior: classical
+    format: text
     url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt"
     path: ./ruleset/loyalsoldier_applications.txt
     interval: 86400
