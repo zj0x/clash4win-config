@@ -464,12 +464,14 @@ rules:
 
   # ─⑥ 代理服务（细粒度 → 粗粒度）─
   - RULE-SET,ai_service,🧠 AI 服务
+  - GEOSITE,openai,🧠 AI 服务
   - GEOSITE,youtube,📹 YouTube
   - GEOSITE,google,🔍 Google
   - GEOSITE,telegram,📲 Telegram
   - GEOSITE,github,🚀 节点选择
   - GEOSITE,twitter,🚀 节点选择
   - GEOSITE,category-scholar-!cn,🚀 节点选择
+  - GEOSITE,reddit,🚀 节点选择
 
   # ─⑦ Apple & Microsoft 全球服务直连 ─
   # 中国可正常访问，默认直连；如需代理请使用 advanced 配置
