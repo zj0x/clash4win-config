@@ -2,7 +2,7 @@
 # Clash Verge Rev 配置 (Mihomo 内核)
 # 适配：Windows | 地区：中国大陆 | 模式：白名单
 # 白名单逻辑：已知国内域名/IP → 直连，其余 → 代理（安全优先）
-# 更新：2026-03-01
+# 更新：2026-03-02
 # ============================================================
 
 # ─── 基础设置 ───────────────────────────────────────────────
@@ -76,7 +76,7 @@ sniffer:
 #   • 无需配置海外 DNS：fake-ip 模式下被墙域名根本不走本地 DNS
 dns:
   enable: true
-  prefer-h3: false                  # ⚠️ 官方文档：强烈不建议与 respect-rules 同时启用
+  #prefer-h3: false                  # ⚠️ 官方文档：强烈不建议与 respect-rules 同时启用
   listen: 127.0.0.1:1053
   ipv6: false
 
@@ -252,6 +252,16 @@ proxy-groups:
       - "新加坡"
       - "美国"
       - "🔧 手动切换"
+
+  - name: "🐙 GitHub"
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GitHub.png
+    proxies:
+      - "🔧 手动切换"
+      - "日本"
+      - "美国"
+      - "新加坡"
+      - "⚡ 自动选择"
 
   - name: "📲 Telegram"
     type: select
@@ -477,7 +487,7 @@ rules:
   - GEOSITE,youtube,📹 YouTube
   - GEOSITE,google,🔍 Google
   - GEOSITE,telegram,📲 Telegram
-  - GEOSITE,github,🚀 节点选择
+  - GEOSITE,github,🐙 GitHub
   - GEOSITE,twitter,🚀 节点选择
   - GEOSITE,category-scholar-!cn,🚀 节点选择
   - GEOSITE,reddit,🚀 节点选择
