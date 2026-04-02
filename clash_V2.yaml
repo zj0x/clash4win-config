@@ -468,6 +468,9 @@ rules:
   - GEOSITE,private,DIRECT
   - GEOIP,private,DIRECT,no-resolve
 
+  # ─③.1 指定 IP 走新加坡节点 ─
+  - IP-CIDR,47.84.22.189/32,新加坡,no-resolve
+
   # ─④ 屏蔽 ─
   - RULE-SET,adobe_block,REJECT
 
